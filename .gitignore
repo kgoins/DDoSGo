@@ -3,6 +3,9 @@
 *.a
 *.so
 
+src/agent
+src/handler
+
 # Folders
 _obj
 _test

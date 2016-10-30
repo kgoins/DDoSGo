@@ -1,5 +1,5 @@
 package msgs
 
-func Printmsg() string {
-    return "Hi MSG!"
+type Msg interface {
+	Handle()
 }
