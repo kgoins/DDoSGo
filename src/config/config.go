@@ -6,7 +6,7 @@ import "fmt"
 
 type AgentConf struct {
 	HandlerAddr string
-	HandlerPort int
+	HandlerPort string
 }
 
 type HandlerConf struct{}
@@ -19,8 +19,14 @@ func ReadAgentConf() (AgentConf, error) {
 
 	err := json.Unmarshal(rawFile, &conf)
 
-	if err != nil {
+	if fileErr != nil {
 		fmt.Println("error reading agent config")
+		fmt.Println(err)
+		return conf, err
+	}
+
+	if err != nil {
+		fmt.Println("error parsing agent config")
 		fmt.Println(err)
 		return conf, err
 	}

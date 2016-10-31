@@ -14,7 +14,7 @@ type Agent struct {
 func NewAgent() (Agent, error) {
 	agentConf, err := config.ReadAgentConf()
 
-	var handlerAddr string = agentConf.HandlerAddr + ":" + string(agentConf.HandlerPort)
+	var handlerAddr string = agentConf.HandlerAddr + ":" + agentConf.HandlerPort
 	fmt.Println(handlerAddr)
 
 	return Agent{handlerAddr: handlerAddr}, err

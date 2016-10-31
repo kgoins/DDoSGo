@@ -1,4 +1,4 @@
 {
     "handlerAddr": "127.0.0.1",
-    "handlerPort": 1337
+    "handlerPort": "1337"
 }
