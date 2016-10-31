@@ -5,12 +5,19 @@ import "fmt"
 import "bufio"
 import "os"
 
+import "config"
+
 type Agent struct {
 	handlerAddr string
 }
 
-func NewAgent() Agent {
-	return Agent{handlerAddr: "127.0.0.1:8081"}
+func NewAgent() (Agent, error) {
+	agentConf, err := config.ReadAgentConf()
+
+	var handlerAddr string = agentConf.HandlerAddr + ":" + string(agentConf.HandlerPort)
+	fmt.Println(handlerAddr)
+
+	return Agent{handlerAddr: handlerAddr}, err
 }
 
 func (agent Agent) DialHandler() (net.Conn, error) {
@@ -26,6 +33,7 @@ func (agent Agent) DialHandler() (net.Conn, error) {
 
 func (agent Agent) sendMsg() {
 	conn, _ := agent.DialHandler()
+	defer conn.Close()
 
 	for {
 		// read in input from stdin
@@ -43,6 +51,11 @@ func (agent Agent) sendMsg() {
 }
 
 func main() {
-	agent := NewAgent()
+	agent, newAgentErr := NewAgent()
+	if newAgentErr != nil {
+		fmt.Println("error creating agent")
+		fmt.Println(newAgentErr)
+		return
+	}
 	agent.sendMsg()
 }
