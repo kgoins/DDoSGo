@@ -6,7 +6,7 @@ import "bufio"
 import "runtime"
 import "strings"
 
-import "config_parsers"
+// import "config"
 
 type Handler struct {
 	server_sock net.Listener
@@ -15,7 +15,7 @@ type Handler struct {
 
 func NewHandler() Handler {
 	// listen on all interfaces
-	ln, _ := net.Listen("tcp", ":8081")
+	ln, _ := net.Listen("tcp", ":1337")
 	workers := runtime.NumCPU()
 
 	return Handler{server_sock: ln, max_workers: workers}
