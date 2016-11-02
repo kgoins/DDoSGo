@@ -1,5 +1,8 @@
 package msgs
 
+// import "Cmd"
+
 type Msg interface {
-	Handle()
+	// BuildCommand() Cmd
+	String() string
 }

@@ -2,59 +2,55 @@ package main
 
 import "net"
 import "fmt"
-import "bufio"
 import "runtime"
-import "strings"
+import "msgs"
 
 // import "config"
 
 type Handler struct {
 	server_sock net.Listener
 	max_workers int
+	max_buff    int
+	msgChannel  chan net.Conn
 }
 
-func NewHandler() Handler {
+func NewHandler() *Handler {
+	port := ":1337"
+	workers := runtime.NumCPU() * 20
+	fmt.Println("Num workers: ", workers)
+	buff_size := 1000
+
 	// listen on all interfaces
-	ln, _ := net.Listen("tcp", ":1337")
-	workers := runtime.NumCPU()
+	listenerSock, _ := net.Listen("tcp", port)
 
-	return Handler{server_sock: ln, max_workers: workers}
+	return &Handler{
+		server_sock: listenerSock,
+		max_workers: workers,
+		max_buff:    buff_size,
+		msgChannel:  make(chan net.Conn, buff_size)}
 }
 
-func (handler Handler) Close() {
+func (handler *Handler) Close() {
 	handler.server_sock.Close()
 }
 
-func (handler Handler) messageDispatcher() {
-	// accept connection on port
-	conn, _ := handler.server_sock.Accept()
+func (handler *Handler) Run() {
+	defer handler.Close()
+	fmt.Println("Starting Handler...")
 
-	// run loop forever (or until ctrl-c)
+	dispatcher := msgs.NewMsgDispatcher(handler.msgChannel, handler.max_workers)
+	dispatcher.Run()
+
 	for {
-		// will listen for message to process ending in newline (\n)
-		message, err := bufio.NewReader(conn).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			break
-		}
-
-		// output message received
-		fmt.Print("Message Received:", string(message))
-
-		// sample process for string received
-		newmessage := strings.ToUpper(message)
-
-		// send new string back to client
-		conn.Write([]byte(newmessage + "\n"))
+		conn, _ := handler.server_sock.Accept()
+		handler.msgChannel <- conn
+		fmt.Println("Chan cap: ", len(handler.msgChannel))
 	}
 }
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
-	fmt.Println("Launching server...")
-
 	handler := NewHandler()
-	defer handler.Close()
-	handler.messageDispatcher()
+	handler.Run()
 }
