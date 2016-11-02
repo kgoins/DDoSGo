@@ -43,5 +43,5 @@ func handleConn(conn net.Conn) {
 	message, _ := bufio.NewReader(conn).ReadString('\n')
 	fmt.Println(message)
 	conn.Close()
-	time.Sleep(100 * time.Millisecond)
+	time.Sleep(1000 * time.Millisecond)
 }

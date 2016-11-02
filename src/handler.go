@@ -16,7 +16,7 @@ type Handler struct {
 
 func NewHandler() *Handler {
 	port := ":1337"
-	workers := runtime.NumCPU() * 20
+	workers := runtime.NumCPU() * 1000
 	fmt.Println("Num workers: ", workers)
 	buff_size := 1000
 
