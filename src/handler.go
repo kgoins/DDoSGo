@@ -41,10 +41,22 @@ func (handler *Handler) Run() {
 	dispatcher := msgs.NewMsgDispatcher(handler.msgChannel, handler.max_workers)
 	dispatcher.Run()
 
+	var chanCap int = 0
+
 	for {
 		conn, _ := handler.server_sock.Accept()
 		handler.msgChannel <- conn
-		fmt.Println("Chan cap: ", len(handler.msgChannel))
+
+		chanCap = getMax(chanCap, len(handler.msgChannel))
+		fmt.Println("Max Chan cap: ", chanCap)
+	}
+}
+
+func getMax(num1, num2 int) int {
+	if num1 > num2 {
+		return num1
+	} else {
+		return num2
 	}
 }
 
