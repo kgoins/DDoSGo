@@ -56,6 +56,7 @@ func (dispatcher *MsgDispatcher) dispatch() {
 		case conn := <-dispatcher.inboundConns:
 			availWorker := <-dispatcher.workerChannel
 			availWorker <- conn
+			fmt.Println("got a connection from: " + conn.RemoteAddr().String())
 		}
 	}
 }

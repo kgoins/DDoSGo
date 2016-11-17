@@ -2,9 +2,11 @@ package main
 
 import "net"
 import "fmt"
-import "bufio"
-import "os"
 
+// import "bufio"
+// import "os"
+
+import "msgs"
 import "config"
 
 type Agent struct {
@@ -25,30 +27,34 @@ func (agent Agent) DialHandler() (net.Conn, error) {
 
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
-		return nil, err
+		return conn, err
 	} else {
 		return conn, nil
 	}
 }
 
-func (agent Agent) sendMsg() {
-	conn, _ := agent.DialHandler()
+func (agent Agent) sendMsg() error {
+	conn, err := agent.DialHandler()
+	if err != nil {
+		return err
+	}
 	defer conn.Close()
 
-	for {
-		// read in input from stdin
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("Text to send: ")
-		text, _ := reader.ReadString('\n')
+	// // read in input from stdin
+	// reader := bufio.NewReader(os.Stdin)
+	// fmt.Print("Text to send: ")
+	// text, _ := reader.ReadString('\n')
 
-		// send to socket
-		fmt.Fprintf(conn, text+"\n")
+	msg := msgs.NewDebugMsg("Hello World!")
+	msgData := msgs.EncodeMsg(msg)
 
-		// listen for reply
-		message, _ := bufio.NewReader(conn).ReadString('\n')
-		fmt.Print("Message from server: " + message)
-	}
+	fmt.Println(string(msgData))
+
+	// send to socket
+	conn.Write(msgData)
+	fmt.Println("sending message: " + msg.String())
+
+	return nil
 }
 
 func main() {

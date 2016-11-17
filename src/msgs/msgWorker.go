@@ -3,7 +3,7 @@ package msgs
 import "net"
 import "fmt"
 import "sync"
-import "encoding/json"
+import "io/ioutil"
 
 import "time"
 
@@ -54,13 +54,11 @@ func (worker *MsgWorker) Start() {
 
 func handleConn(conn net.Conn) {
 	defer conn.Close()
+	fmt.Println("handling conn from: " + conn.RemoteAddr().String())
 
-	decoder := json.NewDecoder(conn)
-
-	var msg Msg
-	err := decoder.Decode(&msg)
-
-	fmt.Println(msg, err)
+	msgBytes, _ := ioutil.ReadAll(conn)
+	msg := BulidMsg(msgBytes)
+	fmt.Println("received msg: " + msg.String())
 
 	time.Sleep(100 * time.Millisecond)
 }
