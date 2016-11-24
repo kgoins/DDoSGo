@@ -40,11 +40,6 @@ func (agent Agent) sendMsg() error {
 	}
 	defer conn.Close()
 
-	// // read in input from stdin
-	// reader := bufio.NewReader(os.Stdin)
-	// fmt.Print("Text to send: ")
-	// text, _ := reader.ReadString('\n')
-
 	msg := msgs.NewDebugMsg("Hello World!")
 	msgData := msgs.EncodeMsg(msg)
 

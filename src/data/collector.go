@@ -1,1 +1,1 @@
-package msgs
+package data
