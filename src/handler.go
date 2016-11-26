@@ -3,6 +3,7 @@ package main
 import "net"
 import "fmt"
 import "runtime"
+import "log"
 
 import "os"
 import "syscall"
@@ -20,6 +21,13 @@ type Handler struct {
 	killsig     chan bool
 	dispatcher  *msgs.MsgDispatcher
 }
+
+var (
+	Trace   *log.Logger
+	Info    *log.Logger
+	Warning *log.Logger
+	Error   *log.Logger
+)
 
 func NewHandler() *Handler {
 	port := ":1337"
@@ -103,10 +111,48 @@ func getMax(num1, num2 int) int {
 	}
 }
 
+// exists returns whether the given file or directory exists or not
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return true, err
+}
+
+func setupLogger() {
+
+	direxists, err := exists("./logs")
+	if !direxists {
+		direrr := os.Mkdir("./logs", 0766)
+		if direrr != nil {
+			fmt.Printf("Error init logging dir: %v", direrr)
+			os.Exit(1)
+		}
+	}
+
+	fexists, err := exists("./logs/handler_log.txt")
+	if !fexists {
+		os.Create("./logs/handler_log.txt")
+	}
+
+	errlog, err := os.Open("./logs/handler_log.txt")
+	if err != nil {
+		fmt.Printf("Error initalizing error logging: %v", err)
+		os.Exit(1)
+	}
+
+	Trace = log.New(errlog, "Application Log: ", log.Lshortfile|log.LstdFlags)
+
+}
+
 // *** MAIN *** //
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
-
+	setupLogger()
 	handler := NewHandler()
 	handler.Run()
 }
