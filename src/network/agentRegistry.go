@@ -18,7 +18,7 @@ Utilize interface to create a new "register" message for agent to send to handle
 
 /*LOOK/FEEL OF MSG
 Critical info about agent
-Add or Remove command
+
 */
 
 type AgentRecord struct {
@@ -37,13 +37,17 @@ type AgentRecord struct {
  *@param list A slice which contains all of the routers between the agent and the interwebz
  *@return A reference to the agent record itself
  */
-func newAgentRecord(aName string, hName string, port int, list []string) *AgentRecord {
+func NewAgentRecord(aName string, hName string, port int, list []string) *AgentRecord {
 
 	return &AgentRecord{
 		agent_hostname:   aName,
 		handler_hostname: hName,
 		handler_port:     port,
 		traceroute:       list}
+}
+
+func (rec *AgentRecord) GetAgHostname() string {
+	return rec.agent_hostname
 }
 
 /************************************************************************************************/
@@ -58,7 +62,7 @@ type AgentRegistry struct {
  *The constructor for the AgentRegistry
  *Initializes a hash map to store the future AgentRecords
  */
-func start() *AgentRegistry {
+func Start() *AgentRegistry {
 	//Initialize a hash map for agents
 	//Return a pointer to an agent registry
 	//Is the constructor
@@ -73,7 +77,7 @@ func start() *AgentRegistry {
  *If the hostname is not found in the registry nothing is done
  *@param hostname A string representing the host name of the agent to be removed
  */
-func (reg *AgentRegistry) removeAgent(hostname string) {
+func (reg *AgentRegistry) RemoveAgent(hostname string) {
 	//Removes an agent from the list of registered agents
 
 	delete(reg.registry, hostname)
@@ -85,7 +89,7 @@ func (reg *AgentRegistry) removeAgent(hostname string) {
  *@param agent The AgentRecord to be added to the AgentRegistry
  *@see newAgentRecord
  */
-func (reg *AgentRegistry) addAgent(agent AgentRecord) {
+func (reg *AgentRegistry) AddAgent(agent AgentRecord) {
 	//Adds and agent to the registry (hash map)
 	reg.registry[agent.handler_hostname] = agent
 }
@@ -95,7 +99,7 @@ func (reg *AgentRegistry) addAgent(agent AgentRecord) {
  *@param hostname The hostname of the agent to retrieve list for
  *@return A slice containing all of the devices between the agent and the web
  */
-func (reg *AgentRegistry) returnTrace(hostname string) []string {
+func (reg *AgentRegistry) ReturnTrace(hostname string) []string {
 	//Returns all routers between an agent and the internet
 	//Returns whatever the config file has in it for a particular agent
 	//Return arrayList of host names?
