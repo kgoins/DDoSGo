@@ -1,4 +1,6 @@
 {
     "handlerAddr": "127.0.0.1",
-    "handlerPort": "1337"
+    "handlerPort": "1337",
+    "handlerName": "hostname"
+    //Will have list of devices between itself and the internet (as host names)
 }
