@@ -20,25 +20,31 @@ import fmt
 	Utilize interface to create a new "register" message for agent to send to handler
 */
 
+/*LOOK/FEEL OF MSG
+	Critical info about agent
+	Add or Remove command
+*/
+
+struct AgentRegistry{
+	//Hash map of agents
+}
+
+struct Agent{
+	//What makes up an agent record
+	//host name, ip addr, port
+	//ArrayList trace
+}
 
 func start(){
 	//Initialize a hash map for agents	
 	//Create a channel for other objects to communicate with it
+	//Return a pointer to an agent registry
+	//Is the constructor
 }
 
 func removeAgent(){
 	//Removes an agent from the list of registered agents
 	//Throws error if it does not exist
-}
-
-func checkAgentCount(){
-	//Checks how many agents are on a given host
-	//Each host should only have one agent
-	//REDACTED??
-}
-
-func getChannel(){
-	//Returns a reference to the channel for the registry
 }
 
 func addAgent(){
