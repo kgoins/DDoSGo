@@ -2,10 +2,9 @@ package network
 
 /*AGENT REGISTRY- handler side
 Initialized with this.start function
-Accepts an incoming "register" message and adds that agent to the registry
+
 Maintains a list of all of the agents a handler is in charge of
-Removes agents when it shuts down or requests to be removed
-Note: Each host should only have one agent
+Removes agents when they shuts down or request to be removed
 */
 
 /*MODIFYING AGENTS CLASS
@@ -22,7 +21,6 @@ Critical info about agent
 Add or Remove command
 */
 
-/* EXPECTED DEF OF AGENT*/
 type AgentRecord struct {
 	//What makes up an agent record
 	agent_hostname   string
@@ -31,12 +29,35 @@ type AgentRecord struct {
 	traceroute       []string //An empty list, use append to add to it
 }
 
+/**
+ *The constructor for the AgentRecord struct
+ *@param aName the agent hostname
+ *@param hName The handler hostname
+ *@param port The port number that the handler-agent connection is on
+ *@param list A slice which contains all of the routers between the agent and the interwebz
+ *@return A reference to the agent record itself
+ */
+func newAgentRecord(aName string, hName string, port int, list []string) *AgentRecord {
+
+	return &AgentRecord{
+		agent_hostname:   aName,
+		handler_hostname: hName,
+		handler_port:     port,
+		traceroute:       list}
+}
+
+/************************************************************************************************/
+
 type AgentRegistry struct {
 	//Hash map of agents
 	//The registry is a hashmap with hostnames as the key which returns the Agent record
 	registry map[string]AgentRecord
 }
 
+/**
+ *The constructor for the AgentRegistry
+ *Initializes a hash map to store the future AgentRecords
+ */
 func start() *AgentRegistry {
 	//Initialize a hash map for agents
 	//Return a pointer to an agent registry
@@ -47,6 +68,11 @@ func start() *AgentRegistry {
 		registry: reg}
 }
 
+/**
+ *Removes an AgentRecord from the AgentRegistry
+ *If the hostname is not found in the registry nothing is done
+ *@param hostname A string representing the host name of the agent to be removed
+ */
 func (reg *AgentRegistry) removeAgent(hostname string) {
 	//Removes an agent from the list of registered agents
 
@@ -54,11 +80,21 @@ func (reg *AgentRegistry) removeAgent(hostname string) {
 	//if hosname does not exist, delete does nothing
 }
 
+/**
+ *Adds a new AgentRecord to the AgentRegistry
+ *@param agent The AgentRecord to be added to the AgentRegistry
+ *@see newAgentRecord
+ */
 func (reg *AgentRegistry) addAgent(agent AgentRecord) {
 	//Adds and agent to the registry (hash map)
 	reg.registry[agent.handler_hostname] = agent
 }
 
+/**
+ *Gives the list of all routers between the agent and the interwebz
+ *@param hostname The hostname of the agent to retrieve list for
+ *@return A slice containing all of the devices between the agent and the web
+ */
 func (reg *AgentRegistry) returnTrace(hostname string) []string {
 	//Returns all routers between an agent and the internet
 	//Returns whatever the config file has in it for a particular agent
