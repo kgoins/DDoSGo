@@ -6,7 +6,7 @@ type RegisterMsg struct {
 	record network.AgentRecord
 }
 
-func newRegisterMsg(rec network.AgentRecord) RegisterMsg {
+func NewRegisterMsg(rec network.AgentRecord) RegisterMsg {
 	return RegisterMsg{
 		record: rec}
 }
