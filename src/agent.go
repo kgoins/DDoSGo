@@ -85,15 +85,18 @@ func (agent Agent) msgSender() {
 			return
 
 		case msg := <-agent.msgChannel:
-			conn, err := agent.dialHandler()
-			if err != nil {
-				agent.serverErrHandler(err)
+			conn, dialErr := agent.dialHandler()
+			if dialErr != nil {
+				agent.ntwkErrHandler(dialErr)
 			}
 
 			msgData := msgs.EncodeMsg(msg)
 
-			conn.Write(msgData)
 			fmt.Println("sending message: " + msg.String())
+			_, writeErr := conn.Write(msgData)
+			if writeErr != nil {
+				agent.ntwkErrHandler(writeErr)
+			}
 
 			conn.Close()
 		}
@@ -103,7 +106,7 @@ func (agent Agent) msgSender() {
 func (agent Agent) msgReceiver() {
 }
 
-func (agent Agent) serverErrHandler(err error) {
+func (agent Agent) ntwkErrHandler(err error) {
 	switch errType := err.(type) {
 	case *net.OpError:
 		if errType.Op == "accept" {

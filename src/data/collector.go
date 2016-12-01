@@ -25,11 +25,9 @@ func (collector DataCollector) Start() {
 				return
 
 			default:
-				cpu := cpuUtil()
-				ram := ramUtil()
-				ntwk := ntwkUtil()
+				data := collectData()
 
-				dataStream := msgs.NewDataStream(cpu, ram, ntwk)
+				dataStream := buildDataStream(data)
 				collector.msgChan <- dataStream
 
 				time.Sleep(time.Second * time.Duration(collector.intVal))
@@ -41,6 +39,25 @@ func (collector DataCollector) Start() {
 func (collector DataCollector) Close() {
 	collector.shutdown <- true
 	close(collector.shutdown)
+}
+
+// Data Collection
+type Data struct {
+	cpu      int
+	ram      int
+	ntwkUtil int
+}
+
+func collectData() Data {
+	cpu := cpuUtil()
+	ram := ramUtil()
+	ntwkUtil := ntwkUtil()
+
+	return Data{cpu: cpu, ram: ram, ntwkUtil: ntwkUtil}
+}
+
+func buildDataStream(data Data) msgs.DataStream {
+	return msgs.NewDataStream(data.cpu, data.ram, data.ntwkUtil)
 }
 
 func cpuUtil() int {

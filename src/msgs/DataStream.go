@@ -8,7 +8,6 @@ type DataStream struct {
 	Ntwk int
 }
 
-// Construct new data stream -- take in # workers & function they should call
 func NewDataStream(cpu, ram, ntwk int) DataStream {
 	return DataStream{
 		Cpu:  cpu,
