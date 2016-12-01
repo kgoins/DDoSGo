@@ -14,15 +14,15 @@ import "dispatcher"
 
 type Handler struct {
 	serverSock        net.Listener
-	max_workers       int
-	max_buff          int
+	maxWorkers        int
+	maxBuff           int
 	dispatcherChannel chan dispatcher.Dispatchable
 	killsig           chan bool
 	dispatcher        *dispatcher.Dispatcher
 }
 
 func NewHandler() *Handler {
-	port := ":1337"
+	port := ":1337" // TODO: read from conf
 
 	buff_size := 1000 // TODO: read from conf
 	dispatcherChannel := make(chan dispatcher.Dispatchable, buff_size)
@@ -35,8 +35,8 @@ func NewHandler() *Handler {
 
 	return &Handler{
 		serverSock:        listenerSock,
-		max_workers:       workers,
-		max_buff:          buff_size,
+		maxWorkers:        workers,
+		maxBuff:           buff_size,
 		dispatcherChannel: dispatcherChannel,
 		killsig:           make(chan bool),
 		dispatcher:        dispatcher}
@@ -49,9 +49,6 @@ func (handler *Handler) Run() {
 
 	handler.signalHandler()
 	handler.serve()
-
-	<-handler.killsig
-	fmt.Println("Handler closed")
 }
 
 func (handler *Handler) serve() {
@@ -59,16 +56,7 @@ func (handler *Handler) serve() {
 	for {
 		conn, err := handler.serverSock.Accept()
 		if err != nil {
-			switch errType := err.(type) {
-			case *net.OpError:
-				if errType.Op == "accept" {
-					println("Server socket closed")
-					return
-				}
-
-			default:
-				fmt.Println(err)
-			}
+			handler.serverErrHandler(err)
 		}
 
 		msgWork := dispatcher.NewMsgDispatchable(conn)
@@ -80,25 +68,36 @@ func (handler *Handler) serve() {
 }
 
 func (handler *Handler) Close() {
-	fmt.Println("Closing handler")
-
 	handler.dispatcher.Close()
 	handler.serverSock.Close()
 
 	close(handler.dispatcherChannel)
 	close(handler.killsig)
 
-	handler.killsig <- true
+	fmt.Println("Closing handler")
+	os.Exit(1)
+}
+
+func (handler *Handler) serverErrHandler(err error) {
+	switch errType := err.(type) {
+	case *net.OpError:
+		if errType.Op == "accept" {
+			println("Server socket closed, shutting down")
+			handler.Close()
+		}
+
+	default:
+		fmt.Println(err)
+	}
 }
 
 func (handler *Handler) signalHandler() {
-	killsig := make(chan os.Signal, 1)
-	signal.Notify(killsig, syscall.SIGINT, syscall.SIGTERM)
+	osKillsig := make(chan os.Signal, 1)
+	signal.Notify(osKillsig, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		<-killsig
+		<-osKillsig
 		handler.Close()
-		os.Exit(1)
 	}()
 }
 
