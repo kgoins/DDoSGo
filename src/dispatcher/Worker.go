@@ -1,9 +1,7 @@
 package dispatcher
 
-import "net"
 import "fmt"
 import "sync"
-import "io/ioutil"
 
 type Worker struct {
 	workerPool         chan chan Dispatchable
@@ -44,17 +42,8 @@ func (worker *Worker) Start() {
 					return
 				}
 
-				work.DispatchableExecute()
+				work.DispatchableExec()
 			}
 		}
 	}()
-}
-
-func handleConn(conn Dispatchable) {
-	defer conn.Close()
-	fmt.Println("handling conn from: " + conn.RemoteAddr().String())
-
-	msgBytes, _ := ioutil.ReadAll(conn)
-	msg := BulidMsg(msgBytes)
-	fmt.Println("received msg: " + msg.String())
 }
