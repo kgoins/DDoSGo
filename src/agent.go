@@ -3,26 +3,47 @@ package main
 import "net"
 import "fmt"
 
-// import "bufio"
-// import "os"
-
 import "msgs"
 import "config"
 
+import "data"
+
 type Agent struct {
-	handlerAddr string
+	handlerAddr        string
+	msgChannel         chan Msg
+	serverSock         net.Listener
+	collectionInterval int
 }
 
 func NewAgent() (Agent, error) {
 	agentConf, err := config.ReadAgentConf()
 
 	var handlerAddr string = agentConf.HandlerAddr + ":" + agentConf.HandlerPort
-	fmt.Println(handlerAddr)
+	fmt.Println("Connecting to handler: " + handlerAddr)
 
-	return Agent{handlerAddr: handlerAddr}, err
+	collectionInterval := 15
+
+	msgChannel := make(chan Msg)
+
+	port := ":1338" // TODO: read from conf
+	serverSock, _ := net.Listen("tcp", port)
+
+	return Agent{handlerAddr: handlerAddr,
+		serverSock:         listenerSock,
+		collectionInterval: collectionInterval,
+		msgChannel:         msgChannel}, err
 }
 
-func (agent Agent) DialHandler() (net.Conn, error) {
+func (agent Agent) Start() {
+	go msgSender()
+
+	collector := data.NewDataCollector(agent.msgChannel, agent.collectionInterval)
+	collector.Start()
+
+	// msgReceiver()
+}
+
+func (agent Agent) dialHandler() (net.Conn, error) {
 	conn, err := net.Dial("tcp", agent.handlerAddr)
 
 	if err != nil {
@@ -33,23 +54,29 @@ func (agent Agent) DialHandler() (net.Conn, error) {
 	}
 }
 
-func (agent Agent) sendMsg() error {
-	conn, err := agent.DialHandler()
-	if err != nil {
-		return err
+func (agent Agent) msgSender() {
+	for {
+		select {
+		case <-shutdown:
+			return
+
+		case msg := <-agent.msgChannel:
+			conn, err := agent.dialHandler()
+			if err != nil {
+				return err
+			}
+
+			msgData := msgs.EncodeMsg(msg)
+
+			conn.Write(msgData)
+			fmt.Println("sending message: " + msg.String())
+
+			conn.Close()
+		}
 	}
-	defer conn.Close()
+}
 
-	msg := msgs.NewDebugMsg("Hello World!")
-	msgData := msgs.EncodeMsg(msg)
-
-	fmt.Println(string(msgData))
-
-	// send to socket
-	conn.Write(msgData)
-	fmt.Println("sending message: " + msg.String())
-
-	return nil
+func (agent Agent) msgReceiver() {
 }
 
 func main() {
@@ -59,5 +86,5 @@ func main() {
 		fmt.Println(newAgentErr)
 		return
 	}
-	agent.sendMsg()
+	agent.Start()
 }
