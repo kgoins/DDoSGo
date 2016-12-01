@@ -1,13 +1,14 @@
 package data
 
 import "msgs"
+import "time"
 
 type DataCollector struct {
-	msgChan chan Msg
+	msgChan chan msgs.Msg
 	intVal  int
 }
 
-func NewDataCollector(msgChan chan Msg, intval int) DataCollector {
+func NewDataCollector(msgChan chan msgs.Msg, intval int) DataCollector {
 	return DataCollector{msgChan: msgChan, intVal: intval}
 }
 
@@ -18,10 +19,10 @@ func (collector DataCollector) Start() {
 			ram := ramUtil()
 			ntwk := ntwkUtil()
 
-			dataStream := NewDataStream(cpu, ram, ntwk)
+			dataStream := msgs.NewDataStream(cpu, ram, ntwk)
 			collector.msgChan <- dataStream
 
-			time.Sleep(collector.intVal * time.Millisecond)
+			time.Sleep(time.Second * time.Duration(collector.intVal))
 		}
 	}()
 }

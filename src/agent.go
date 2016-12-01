@@ -10,9 +10,10 @@ import "data"
 
 type Agent struct {
 	handlerAddr        string
-	msgChannel         chan Msg
 	serverSock         net.Listener
 	collectionInterval int
+	msgChannel         chan msgs.Msg
+	shutdown           chan bool
 }
 
 func NewAgent() (Agent, error) {
@@ -21,25 +22,27 @@ func NewAgent() (Agent, error) {
 	var handlerAddr string = agentConf.HandlerAddr + ":" + agentConf.HandlerPort
 	fmt.Println("Connecting to handler: " + handlerAddr)
 
-	collectionInterval := 15
+	collectionInterval := 5
 
-	msgChannel := make(chan Msg)
+	msgChannel := make(chan msgs.Msg)
+	shutdown := make(chan bool)
 
 	port := ":1338" // TODO: read from conf
 	serverSock, _ := net.Listen("tcp", port)
 
 	return Agent{handlerAddr: handlerAddr,
-		serverSock:         listenerSock,
+		serverSock:         serverSock,
 		collectionInterval: collectionInterval,
+		shutdown:           shutdown,
 		msgChannel:         msgChannel}, err
 }
 
 func (agent Agent) Start() {
-	go msgSender()
 
 	collector := data.NewDataCollector(agent.msgChannel, agent.collectionInterval)
 	collector.Start()
 
+	agent.msgSender()
 	// msgReceiver()
 }
 
@@ -57,13 +60,13 @@ func (agent Agent) dialHandler() (net.Conn, error) {
 func (agent Agent) msgSender() {
 	for {
 		select {
-		case <-shutdown:
+		case <-agent.shutdown:
 			return
 
 		case msg := <-agent.msgChannel:
 			conn, err := agent.dialHandler()
 			if err != nil {
-				return err
+				fmt.Println(err)
 			}
 
 			msgData := msgs.EncodeMsg(msg)

@@ -2,7 +2,7 @@ package msgs
 
 // import "Cmd"
 import "encoding/json"
-import "log"
+import "fmt"
 
 type Msg interface {
 	// BuildCommand()
@@ -31,20 +31,22 @@ func BulidMsg(msgBytes []byte) Msg {
 	}
 
 	if err := json.Unmarshal(msgBytes, &builder); err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
 
 	switch builder.MsgType {
-	case "debug":
-		msg := DebugMsg{}
-		if err := json.Unmarshal(rawMsg, &msg); err != nil {
-			log.Fatal(err)
-			return nil
-		} else {
-			return msg
-		}
+	case "Debug":
+		msg := Debug{}
+		json.Unmarshal(rawMsg, &msg)
+		return msg
+
+	case "DataStream":
+		msg := DataStream{}
+		json.Unmarshal(rawMsg, &msg)
+		return msg
+
 	default:
-		log.Fatalf("unknown message type: %q", builder.MsgType)
+		fmt.Println("unknown message type: %q", builder.MsgType)
 		return nil
 	}
 }
