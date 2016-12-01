@@ -17,7 +17,6 @@ type Handler struct {
 	maxWorkers        int
 	maxBuff           int
 	dispatcherChannel chan dispatcher.Dispatchable
-	killsig           chan bool
 	dispatcher        *dispatcher.Dispatcher
 }
 
@@ -28,9 +27,9 @@ func NewHandler() *Handler {
 	dispatcherChannel := make(chan dispatcher.Dispatchable, buff_size)
 
 	workers := runtime.NumCPU() * 10 // TODO: read from conf
+	fmt.Println("Num workers: ", workers)
 	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, workers)
 
-	fmt.Println("Num workers: ", workers)
 	listenerSock, _ := net.Listen("tcp", port)
 
 	return &Handler{
@@ -38,7 +37,6 @@ func NewHandler() *Handler {
 		maxWorkers:        workers,
 		maxBuff:           buff_size,
 		dispatcherChannel: dispatcherChannel,
-		killsig:           make(chan bool),
 		dispatcher:        dispatcher}
 }
 
@@ -72,7 +70,6 @@ func (handler *Handler) Close() {
 	handler.serverSock.Close()
 
 	close(handler.dispatcherChannel)
-	close(handler.killsig)
 
 	fmt.Println("Closing handler")
 	os.Exit(1)

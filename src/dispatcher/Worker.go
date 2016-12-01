@@ -24,6 +24,7 @@ func NewWorker(workerPool chan chan Dispatchable) *Worker {
 func (worker *Worker) Close() {
 	worker.quit <- true
 	worker.waitgroup.Wait()
+	close(worker.quit)
 }
 
 func (worker *Worker) Start() {

@@ -35,6 +35,7 @@ func (dispatcher *Dispatcher) Close() {
 	}
 
 	close(dispatcher.workerChannel)
+	close(dispatcher.shutdown)
 	fmt.Println("all workers shutdown")
 }
 
