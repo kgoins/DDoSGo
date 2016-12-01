@@ -93,6 +93,7 @@ func (handler *Handler) serverErrHandler(err error) {
 
 	default:
 		fmt.Println(err)
+		handler.Close()
 	}
 }
 

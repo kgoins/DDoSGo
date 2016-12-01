@@ -4,27 +4,43 @@ import "msgs"
 import "time"
 
 type DataCollector struct {
-	msgChan chan msgs.Msg
-	intVal  int
+	msgChan  chan msgs.Msg
+	intVal   int
+	shutdown chan bool
 }
 
 func NewDataCollector(msgChan chan msgs.Msg, intval int) DataCollector {
-	return DataCollector{msgChan: msgChan, intVal: intval}
+	shutdown := make(chan bool)
+	return DataCollector{
+		msgChan:  msgChan,
+		intVal:   intval,
+		shutdown: shutdown}
 }
 
 func (collector DataCollector) Start() {
 	go func() {
 		for {
-			cpu := cpuUtil()
-			ram := ramUtil()
-			ntwk := ntwkUtil()
+			select {
+			case <-collector.shutdown:
+				return
 
-			dataStream := msgs.NewDataStream(cpu, ram, ntwk)
-			collector.msgChan <- dataStream
+			default:
+				cpu := cpuUtil()
+				ram := ramUtil()
+				ntwk := ntwkUtil()
 
-			time.Sleep(time.Second * time.Duration(collector.intVal))
+				dataStream := msgs.NewDataStream(cpu, ram, ntwk)
+				collector.msgChan <- dataStream
+
+				time.Sleep(time.Second * time.Duration(collector.intVal))
+			}
 		}
 	}()
+}
+
+func (collector DataCollector) Close() {
+	collector.shutdown <- true
+	close(collector.shutdown)
 }
 
 func cpuUtil() int {
