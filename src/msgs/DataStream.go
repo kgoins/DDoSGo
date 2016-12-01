@@ -4,14 +4,14 @@ import "fmt"
 
 type DataStream struct {
 	Cpu  int
-	Ram  int
+	Mem  int
 	Ntwk int
 }
 
-func NewDataStream(cpu, ram, ntwk int) DataStream {
+func NewDataStream(cpu, mem, ntwk int) DataStream {
 	return DataStream{
 		Cpu:  cpu,
-		Ram:  ram,
+		Mem:  mem,
 		Ntwk: ntwk}
 }
 
@@ -20,6 +20,6 @@ func (stream DataStream) GetType() string {
 }
 
 func (stream DataStream) String() string {
-	data := fmt.Sprintf("cpu: %d, ram: %d, ntwk: %d", stream.Cpu, stream.Ram, stream.Ntwk)
+	data := fmt.Sprintf("cpu: %d, mem: %d, ntwk: %d", stream.Cpu, stream.Mem, stream.Ntwk)
 	return fmt.Sprintf("type: %s, payload: %s", stream.GetType(), data)
 }
