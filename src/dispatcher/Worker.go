@@ -5,24 +5,22 @@ import "fmt"
 import "sync"
 import "io/ioutil"
 
-import "msgs"
-
 type Worker struct {
-	workerPool  chan chan net.Conn
-	connChannel chan net.Conn
-	quit        chan bool
-	waitgroup   *sync.WaitGroup
+	workerPool         chan chan Dispatchable
+	inboundWorkChannel chan Dispatchable
+	quit               chan bool
+	waitgroup          *sync.WaitGroup
 }
 
-func NewWorker(workerPool chan chan net.Conn) *Worker {
-	connChannel := make(chan net.Conn)
+func NewWorker(workerPool chan chan Dispatchable) *Worker {
+	inboundWorkChannel := make(chan Dispatchable)
 	quit := make(chan bool)
 
 	return &Worker{
-		workerPool:  workerPool,
-		connChannel: connChannel,
-		waitgroup:   &sync.WaitGroup{},
-		quit:        quit}
+		workerPool:         workerPool,
+		inboundWorkChannel: inboundWorkChannel,
+		waitgroup:          &sync.WaitGroup{},
+		quit:               quit}
 }
 
 func (worker *Worker) Close() {
@@ -39,20 +37,20 @@ func (worker *Worker) Start() {
 			case <-worker.quit:
 				return
 
-			case worker.workerPool <- worker.connChannel:
-				conn, closed := <-worker.connChannel
+			case worker.workerPool <- worker.inboundWorkChannel:
+				work, closed := <-worker.inboundWorkChannel
 				if !closed {
 					fmt.Println("worker pool was closed")
 					return
 				}
 
-				handleConn(conn)
+				work.DispatchableExecute()
 			}
 		}
 	}()
 }
 
-func handleConn(conn net.Conn) {
+func handleConn(conn Dispatchable) {
 	defer conn.Close()
 	fmt.Println("handling conn from: " + conn.RemoteAddr().String())
 

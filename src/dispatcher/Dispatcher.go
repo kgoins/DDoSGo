@@ -3,23 +3,25 @@ package dispatcher
 import "net"
 import "fmt"
 
-import "msgs"
+type Dispatchable interface {
+	DispatchableExecute()
+}
 
 type Dispatcher struct {
 	maxWorkers    int
-	inboundConns  chan net.Conn
-	workerChannel chan chan net.Conn
-	workerPool    []*MsgWorker
+	inboundWork   chan Dispatchable
+	workerChannel chan chan Dispatchable
+	workerPool    []*Worker
 	shutdown      chan bool
 }
 
-func NewDispatcher(inboundConns chan net.Conn, workers int) *Dispatcher {
-	workerChannel := make(chan chan net.Conn)
+func NewDispatcher(inboundWork chan Dispatchable, workers int) *Dispatcher {
+	workerChannel := make(chan chan Dispatchable)
 	shutdown := make(chan bool)
 
 	return &Dispatcher{
 		maxWorkers:    workers,
-		inboundConns:  inboundConns,
+		inboundWork:   inboundWork,
 		workerChannel: workerChannel,
 		workerPool:    make([]*MsgWorker, workers),
 		shutdown:      shutdown}
@@ -55,7 +57,7 @@ func (dispatcher *Dispatcher) dispatch() {
 			fmt.Println("dispatch goroutine closing")
 			return
 
-		case conn := <-dispatcher.inboundConns:
+		case conn := <-dispatcher.inboundWork:
 			availWorker := <-dispatcher.workerChannel
 			availWorker <- conn
 			fmt.Println("got a connection from: " + conn.RemoteAddr().String())
