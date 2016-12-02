@@ -92,7 +92,6 @@ func currCpuStats() (int, int) {
 
 	fileScanner.Scan()
 	cpuRow := strings.Fields(fileScanner.Text())
-	fmt.Println(cpuRow)
 	cpuRow = cpuRow[1:]
 
 	cpuIdle := 0
@@ -126,23 +125,28 @@ func memUtil() int {
 		memStats[i], _ = strconv.Atoi(line[1])
 	}
 
-	memUtil := float64(memStats[1]) / float64(memStats[0])
+	memUsed := memStats[0] - memStats[1]
+	memUtil := float64(memUsed) / float64(memStats[0])
 	return int(memUtil * 100)
 }
 
 // Calculates byte throughput (sent and received) across all interfaces
 func ntwkUtil(intVal int) (int, int) {
 	prevBytesRecv, prevBytesSent := getNtwkThroughput()
+	fmt.Println(getNtwkThroughput())
+
 	time.Sleep(time.Second * time.Duration(intVal))
 	currBytesRecv, currBytesSent := getNtwkThroughput()
+	fmt.Println(getNtwkThroughput())
 
-	bytesRecv := (currBytesRecv - prevBytesRecv) / intVal
-	bytesSent := (currBytesSent - prevBytesSent) / intVal
+	float_intval := float64(intVal)
+	bytesRecv := (currBytesRecv - prevBytesRecv) / float_intval
+	bytesSent := (currBytesSent - prevBytesSent) / float_intval
 
-	return bytesRecv, bytesSent
+	return int(bytesRecv), int(bytesSent)
 }
 
-func getNtwkThroughput() (int, int) {
+func getNtwkThroughput() (float64, float64) {
 	netDevFile, _ := ioutil.ReadFile("/proc/net/dev")
 	netDevLines := strings.Split(string(netDevFile), "\n")
 
@@ -168,7 +172,7 @@ func getNtwkThroughput() (int, int) {
 	bytesRecv := sumCols(ifaceValues, 0)
 	bytesSent := sumCols(ifaceValues, 1)
 
-	return bytesRecv, bytesSent
+	return float64(bytesRecv), float64(bytesSent)
 }
 
 // Unility functions
@@ -191,10 +195,9 @@ func getMax(num1, num2 int) int {
 
 // ** Test of Collector ** //
 func main() {
-	cpuIdle, cpuTotal := currCpuStats()
-	bytesRecv, bytesSent := getNtwkThroughput()
+	recvBPS, sentBPS := ntwkUtil(1)
 
-	fmt.Println("cpu times: ", cpuIdle, cpuTotal)
-	fmt.Println("mem util: ", memUtil())
-	fmt.Println("ntwk bytes: ", bytesRecv, bytesSent)
+	fmt.Println("cpu utilization:", cpuUtil(1), "%")
+	fmt.Println("mem used:", memUtil(), "%")
+	fmt.Println("ntwk bytes:", recvBPS, sentBPS)
 }
