@@ -10,7 +10,7 @@ import "os/signal"
 import "msgs"
 import "config"
 
-import "data"
+import "subsystems"
 
 type Agent struct {
 	handlerAddr        string
@@ -19,7 +19,7 @@ type Agent struct {
 	msgChannel         chan msgs.Msg
 	shutdown           chan bool
 
-	collector data.DataCollector
+	collector subsystems.DataCollector
 }
 
 func NewAgent() (Agent, error) {
@@ -33,7 +33,7 @@ func NewAgent() (Agent, error) {
 
 	collectionInterval := 2
 	sendInterval := 5
-	collector := data.NewDataCollector(msgChannel, collectionInterval, sendInterval)
+	collector := subsystems.NewDataCollector(msgChannel, collectionInterval, sendInterval)
 
 	port := ":1338" // TODO: read from conf
 	serverSock, _ := net.Listen("tcp", port)
