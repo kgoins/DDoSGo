@@ -31,8 +31,9 @@ func NewAgent() (Agent, error) {
 	msgChannel := make(chan msgs.Msg)
 	shutdown := make(chan bool)
 
-	collectionInterval := 5
-	collector := data.NewDataCollector(msgChannel, collectionInterval)
+	collectionInterval := 2
+	sendInterval := 5
+	collector := data.NewDataCollector(msgChannel, collectionInterval, sendInterval)
 
 	port := ":1338" // TODO: read from conf
 	serverSock, _ := net.Listen("tcp", port)

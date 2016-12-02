@@ -22,6 +22,7 @@ func (stream DataStream) GetType() string {
 }
 
 func (stream DataStream) String() string {
-	data := fmt.Sprintf("cpu: %d, mem: %d, ntwk: %d", stream.Cpu, stream.Mem, stream.Ntwk)
+	data := fmt.Sprintf("cpu: %d, mem: %d, ntwk: %d %d", stream.Cpu, stream.Mem,
+		stream.BytesRecvd, stream.BytesSent)
 	return fmt.Sprintf("type: %s, payload: %s", stream.GetType(), data)
 }

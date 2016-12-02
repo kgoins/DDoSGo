@@ -7,7 +7,6 @@ import "os"
 
 import "bufio"
 import "io/ioutil"
-import "fmt"
 import "strings"
 import "strconv"
 
@@ -37,7 +36,7 @@ func (collector DataCollector) Start() {
 				return
 
 			default:
-				data := collectData(collector.collectIntval)
+				dataStream := collectData(collector.collectIntval)
 				collector.msgChan <- dataStream
 
 				time.Sleep(time.Second * time.Duration(collector.sendIntval))
@@ -59,10 +58,6 @@ func collectData(intVal int) msgs.DataStream {
 	bytesRecv, bytesSent := ntwkUtil(intVal)
 
 	return msgs.NewDataStream(cpu, mem, bytesRecv, bytesSent)
-}
-
-func buildDataStream(data Data) msgs.DataStream {
-	return msgs.NewDataStream(data.cpu, data.mem, data.ntwkUtil)
 }
 
 // Calculates the current percentage CPU utilization
@@ -126,11 +121,8 @@ func memUtil() int {
 // Calculates byte throughput (sent and received) across all interfaces
 func ntwkUtil(intVal int) (int, int) {
 	prevBytesRecv, prevBytesSent := getNtwkThroughput()
-	fmt.Println(getNtwkThroughput())
-
 	time.Sleep(time.Second * time.Duration(intVal))
 	currBytesRecv, currBytesSent := getNtwkThroughput()
-	fmt.Println(getNtwkThroughput())
 
 	float_intval := float64(intVal)
 	bytesRecv := (currBytesRecv - prevBytesRecv) / float_intval
