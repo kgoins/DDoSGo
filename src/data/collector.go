@@ -6,6 +6,7 @@ import "time"
 import "os"
 
 import "bufio"
+import "io/ioutil"
 import "fmt"
 import "strings"
 import "strconv"
@@ -13,17 +14,19 @@ import "strconv"
 import "msgs"
 
 type DataCollector struct {
-	msgChan  chan msgs.Msg
-	intVal   int
-	shutdown chan bool
+	msgChan       chan msgs.Msg
+	collectIntval int
+	sendIntval    int
+	shutdown      chan bool
 }
 
-func NewDataCollector(msgChan chan msgs.Msg, intval int) DataCollector {
+func NewDataCollector(msgChan chan msgs.Msg, sendIntval int, collectIntval int) DataCollector {
 	shutdown := make(chan bool)
 	return DataCollector{
-		msgChan:  msgChan,
-		intVal:   intval,
-		shutdown: shutdown}
+		msgChan:       msgChan,
+		sendIntval:    sendIntval,
+		collectIntval: collectIntval,
+		shutdown:      shutdown}
 }
 
 func (collector DataCollector) Start() {
@@ -34,12 +37,12 @@ func (collector DataCollector) Start() {
 				return
 
 			default:
-				data := collectData()
+				data := collectData(collector.collectIntval)
 
 				dataStream := buildDataStream(data)
 				collector.msgChan <- dataStream
 
-				time.Sleep(time.Second * time.Duration(collector.intVal))
+				time.Sleep(time.Second * time.Duration(collector.sendIntval))
 			}
 		}
 	}()
@@ -57,26 +60,59 @@ type Data struct {
 	ntwkUtil int
 }
 
-func collectData() Data {
-	cpu := cpuUtil()
+func collectData(intVal int) Data {
+	cpu := cpuUtil(intVal)
 	mem := memUtil()
-	ntwkUtil := ntwkUtil()
+	bytesRecv, _ := ntwkUtil(intVal)
 
-	return Data{cpu: cpu, mem: mem, ntwkUtil: ntwkUtil}
+	return Data{cpu: cpu, mem: mem, ntwkUtil: bytesRecv}
 }
 
 func buildDataStream(data Data) msgs.DataStream {
 	return msgs.NewDataStream(data.cpu, data.mem, data.ntwkUtil)
 }
 
-func cpuUtil() int {
-	return 12
+// Calculates the current percentage CPU utilization
+func cpuUtil(intVal int) int {
+	prevIdle, prevTotal := currCpuStats()
+	time.Sleep(time.Second * time.Duration(intVal))
+	currIdle, currTotal := currCpuStats()
+
+	diffIdle := currIdle - prevIdle
+	diffTotal := currTotal - prevTotal
+
+	return ((1000 * (diffTotal - diffIdle) / diffTotal) + 5) / 10
+
 }
 
+func currCpuStats() (int, int) {
+	fileHandle, _ := os.Open("/proc/stat")
+	defer fileHandle.Close()
+	fileScanner := bufio.NewScanner(fileHandle)
+
+	fileScanner.Scan()
+	cpuRow := strings.Fields(fileScanner.Text())
+	fmt.Println(cpuRow)
+	cpuRow = cpuRow[1:]
+
+	cpuIdle := 0
+	cpuTotal := 0
+	for i := 0; i < len(cpuRow); i++ {
+		cpuVal, _ := strconv.Atoi(cpuRow[i])
+		cpuTotal += cpuVal
+
+		if i == 3 {
+			cpuIdle = cpuVal
+		}
+	}
+
+	return cpuIdle, cpuTotal
+}
+
+// Calculates the percentage of memory currently in use
 func memUtil() int {
 	fileHandle, _ := os.Open("/proc/meminfo")
 	defer fileHandle.Close()
-
 	fileScanner := bufio.NewScanner(fileHandle)
 
 	// memTotal = memStats[0]
@@ -91,16 +127,74 @@ func memUtil() int {
 	}
 
 	memUtil := float64(memStats[1]) / float64(memStats[0])
-	fmt.Println(memUtil)
-
 	return int(memUtil * 100)
 }
 
-func ntwkUtil() int {
-	return 256
+// Calculates byte throughput (sent and received) across all interfaces
+func ntwkUtil(intVal int) (int, int) {
+	prevBytesRecv, prevBytesSent := getNtwkThroughput()
+	time.Sleep(time.Second * time.Duration(intVal))
+	currBytesRecv, currBytesSent := getNtwkThroughput()
+
+	bytesRecv := (currBytesRecv - prevBytesRecv) / intVal
+	bytesSent := (currBytesSent - prevBytesSent) / intVal
+
+	return bytesRecv, bytesSent
+}
+
+func getNtwkThroughput() (int, int) {
+	netDevFile, _ := ioutil.ReadFile("/proc/net/dev")
+	netDevLines := strings.Split(string(netDevFile), "\n")
+
+	// remove header rows
+	netDevLines = netDevLines[2:]
+
+	var ifaceValues [][]int
+
+	for _, line := range netDevLines {
+		row := strings.Fields(line)
+		byteVals := []int{0, 0}
+
+		if len(row) == 0 || strings.Contains(row[0], "lo:") {
+			continue
+		} else {
+			byteVals[0], _ = strconv.Atoi(row[1])
+			byteVals[1], _ = strconv.Atoi(row[9])
+		}
+
+		ifaceValues = append(ifaceValues, byteVals)
+	}
+
+	bytesRecv := sumCols(ifaceValues, 0)
+	bytesSent := sumCols(ifaceValues, 1)
+
+	return bytesRecv, bytesSent
+}
+
+// Unility functions
+func sumCols(array [][]int, colNum int) int {
+	sum := 0
+	for i := 0; i < len(array); i++ {
+		sum += array[i][colNum]
+	}
+
+	return sum
+}
+
+func getMax(num1, num2 int) int {
+	if num1 > num2 {
+		return num1
+	} else {
+		return num2
+	}
 }
 
 // ** Test of Collector ** //
 func main() {
-	fmt.Println(memUtil())
+	cpuIdle, cpuTotal := currCpuStats()
+	bytesRecv, bytesSent := getNtwkThroughput()
+
+	fmt.Println("cpu times: ", cpuIdle, cpuTotal)
+	fmt.Println("mem util: ", memUtil())
+	fmt.Println("ntwk bytes: ", bytesRecv, bytesSent)
 }
