@@ -3,16 +3,18 @@ package msgs
 import "fmt"
 
 type DataStream struct {
-	Cpu  int
-	Mem  int
-	Ntwk int
+	Cpu        int
+	Mem        int
+	BytesRecvd int
+	BytesSent  int
 }
 
-func NewDataStream(cpu, mem, ntwk int) DataStream {
+func NewDataStream(cpu, mem, bytesRecvd, bytesSent int) DataStream {
 	return DataStream{
-		Cpu:  cpu,
-		Mem:  mem,
-		Ntwk: ntwk}
+		Cpu:        cpu,
+		Mem:        mem,
+		BytesRecvd: bytesRecvd,
+		BytesSent:  bytesSent}
 }
 
 func (stream DataStream) GetType() string {

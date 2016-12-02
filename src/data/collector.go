@@ -1,4 +1,4 @@
-package main
+package data
 
 // package data
 
@@ -38,8 +38,6 @@ func (collector DataCollector) Start() {
 
 			default:
 				data := collectData(collector.collectIntval)
-
-				dataStream := buildDataStream(data)
 				collector.msgChan <- dataStream
 
 				time.Sleep(time.Second * time.Duration(collector.sendIntval))
@@ -54,18 +52,13 @@ func (collector DataCollector) Close() {
 }
 
 // Data Collection
-type Data struct {
-	cpu      int
-	mem      int
-	ntwkUtil int
-}
 
-func collectData(intVal int) Data {
+func collectData(intVal int) msgs.DataStream {
 	cpu := cpuUtil(intVal)
 	mem := memUtil()
-	bytesRecv, _ := ntwkUtil(intVal)
+	bytesRecv, bytesSent := ntwkUtil(intVal)
 
-	return Data{cpu: cpu, mem: mem, ntwkUtil: bytesRecv}
+	return msgs.NewDataStream(cpu, mem, bytesRecv, bytesSent)
 }
 
 func buildDataStream(data Data) msgs.DataStream {
@@ -194,10 +187,10 @@ func getMax(num1, num2 int) int {
 }
 
 // ** Test of Collector ** //
-func main() {
-	recvBPS, sentBPS := ntwkUtil(1)
+// func main() {
+// 	recvBPS, sentBPS := ntwkUtil(1)
 
-	fmt.Println("cpu utilization:", cpuUtil(1), "%")
-	fmt.Println("mem used:", memUtil(), "%")
-	fmt.Println("ntwk bytes:", recvBPS, sentBPS)
-}
+// 	fmt.Println("cpu utilization:", cpuUtil(1), "%")
+// 	fmt.Println("mem used:", memUtil(), "%")
+// 	fmt.Println("ntwk bytes:", recvBPS, sentBPS)
+// }
