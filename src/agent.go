@@ -10,6 +10,8 @@ import "os/signal"
 import "msgs"
 import "config"
 
+import "subsystems"
+
 type Agent struct {
 	handlerAddr        string
 	serverSock         net.Listener

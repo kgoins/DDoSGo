@@ -20,6 +20,6 @@ func (msgDisp MsgDispatchable) DispatchableExec() {
 	fmt.Println("handling conn from: " + msgDisp.conn.RemoteAddr().String())
 
 	msgBytes, _ := ioutil.ReadAll(msgDisp.conn)
-	msg := msgs.BulidMsg(msgBytes)
+	msg := msgs.BuildMsg(msgBytes)
 	fmt.Println("received msg: " + msg.String())
 }

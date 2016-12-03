@@ -24,7 +24,7 @@ func EncodeMsg(msg Msg) []byte {
 	return builderData
 }
 
-func BulidMsg(msgBytes []byte) Msg {
+func BuildMsg(msgBytes []byte) Msg {
 	var rawMsg json.RawMessage
 	builder := MsgBuilder{
 		Payload: &rawMsg,
@@ -34,6 +34,7 @@ func BulidMsg(msgBytes []byte) Msg {
 		fmt.Println(err)
 	}
 
+	fmt.Println("Builder Msg Type: ", builder.MsgType)
 	switch builder.MsgType {
 	case "Debug":
 		msg := Debug{}
@@ -46,7 +47,7 @@ func BulidMsg(msgBytes []byte) Msg {
 		return msg
 
 	default:
-		fmt.Println("unknown message type: %q", builder.MsgType)
+		fmt.Println("unknown message type: %s", builder.MsgType)
 		return nil
 	}
 }

@@ -1,7 +1,5 @@
 package subsystems
 
-import "fmt"
-
 /*AGENT REGISTRY- handler side
 Initialized with this.start function
 

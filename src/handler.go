@@ -58,7 +58,7 @@ func (handler *Handler) Run() {
 
 	//Intitalize the Agent Registry
 	fmt.Println("Starting Agent Registry...")
-	network.Start()
+	subsystems.Start()
 
 	handler.serve()
 }
