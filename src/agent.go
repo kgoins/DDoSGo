@@ -66,7 +66,7 @@ func (agent Agent) Start() {
 	go agent.msgSender()
 
 	//Build and send register msg
-	regMsg := msgs.NewRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace)
+	regMsg := msgs.NewRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, false)
 	//regMsg := msgs.NewRegisterMsg("192.168.0.8", "127.0.0.1")
 	agent.msgChannel <- regMsg
 
@@ -77,6 +77,9 @@ func (agent Agent) Start() {
 }
 
 func (agent Agent) Close() {
+	closeRegMsg := msgs.NewRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, true)
+	agent.msgChannel <- closeRegMsg
+
 	agent.shutdown <- true
 
 	agent.collector.Close()

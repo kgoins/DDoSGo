@@ -60,7 +60,6 @@ func (dispatcher *Dispatcher) dispatch() {
 		case work := <-dispatcher.inboundWork:
 			availWorker := <-dispatcher.workerChannel
 			availWorker <- work
-			fmt.Println("received work")
 		}
 	}
 }
