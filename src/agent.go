@@ -47,7 +47,7 @@ func (agent Agent) sendMsg() error {
 
 	// send to socket
 	conn.Write(msgData)
-	fmt.Println("sending message: " + msg.String())
+	fmt.Println("sending message: " + msg.String())XS
 
 	return nil
 }

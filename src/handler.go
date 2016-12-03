@@ -9,6 +9,7 @@ import "syscall"
 import "os/signal"
 
 import "msgs"
+import "network"
 
 // import "config"
 
@@ -46,6 +47,10 @@ func (handler *Handler) Run() {
 	handler.dispatcher.Run()
 
 	handler.signalHandler()
+
+	//Intitalize the Agent Registry
+	fmt.Println("Starting Agent Registry...")
+	network.Start()
 
 	handler.serve()
 	<-handler.killsig

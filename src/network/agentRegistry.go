@@ -1,10 +1,12 @@
 package network
 
+import "fmt"
+
 /*AGENT REGISTRY- handler side
 Initialized with this.start function
 
 Maintains a list of all of the agents a handler is in charge of
-Removes agents when they shuts down or request to be removed
+Removes agents when they shut down or request to be removed (request should be made before shutdown)
 */
 
 /*MODIFYING AGENTS CLASS
