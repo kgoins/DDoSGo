@@ -6,6 +6,8 @@ import "io/ioutil"
 
 import "msgs"
 
+// import "cmds"
+
 // implements dispatcher.Dispatchable
 type MsgDispatchable struct {
 	conn net.Conn
@@ -22,4 +24,7 @@ func (msgDisp MsgDispatchable) DispatchableExec() {
 	msgBytes, _ := ioutil.ReadAll(msgDisp.conn)
 	msg := msgs.BulidMsg(msgBytes)
 	fmt.Println("received msg: " + msg.String())
+
+	cmd := msg.BuildCmd()
+	cmd.ExecCmd()
 }

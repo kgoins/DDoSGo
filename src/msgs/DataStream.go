@@ -1,6 +1,7 @@
 package msgs
 
 import "fmt"
+import "cmds"
 
 type DataStream struct {
 	Cpu        int
@@ -9,7 +10,7 @@ type DataStream struct {
 	BytesSent  int
 }
 
-func NewDataStream(cpu, mem, bytesRecvd, bytesSent int) DataStream {
+func NewDataStream(cpu int, mem int, bytesRecvd int, bytesSent int) DataStream {
 	return DataStream{
 		Cpu:        cpu,
 		Mem:        mem,
@@ -25,4 +26,8 @@ func (stream DataStream) String() string {
 	data := fmt.Sprintf("cpu: %d, mem: %d, ntwk: %d %d", stream.Cpu, stream.Mem,
 		stream.BytesRecvd, stream.BytesSent)
 	return fmt.Sprintf("type: %s, payload: %s", stream.GetType(), data)
+}
+
+func (stream DataStream) BuildCmd() cmds.Cmd {
+	return cmds.NewProcDataStream(stream.Cpu, stream.Mem, stream.BytesRecvd, stream.BytesSent)
 }

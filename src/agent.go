@@ -10,6 +10,7 @@ import "os/signal"
 import "msgs"
 import "config"
 
+// import "visitors"
 import "subsystems"
 
 type Agent struct {
@@ -52,6 +53,7 @@ func (agent Agent) Start() {
 	agent.collector.Start()
 
 	agent.msgSender()
+
 	// msgReceiver()
 }
 
@@ -132,7 +134,7 @@ func (agent Agent) signalHandler() {
 	}()
 }
 
-// *** MAIN *** //
+// *** AGENT'S MAIN *** //
 func main() {
 	agent, newAgentErr := NewAgent()
 	if newAgentErr != nil {
