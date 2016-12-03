@@ -7,6 +7,7 @@ import "fmt"
 type AgentConf struct {
 	HandlerAddr string
 	HandlerPort string
+	Traceroute  []string
 }
 
 type HandlerConf struct{}

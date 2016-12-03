@@ -16,7 +16,6 @@ type MsgBuilder struct {
 }
 
 func EncodeMsg(msg Msg) []byte {
-	// msgData, _ := json.Marshal(msg)
 	builder := MsgBuilder{MsgType: msg.GetType(), Payload: msg}
 
 	builderData, _ := json.Marshal(builder)
@@ -34,7 +33,6 @@ func BuildMsg(msgBytes []byte) Msg {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Builder Msg Type: ", builder.MsgType)
 	switch builder.MsgType {
 	case "Debug":
 		msg := Debug{}
@@ -43,6 +41,11 @@ func BuildMsg(msgBytes []byte) Msg {
 
 	case "DataStream":
 		msg := DataStream{}
+		json.Unmarshal(rawMsg, &msg)
+		return msg
+
+	case "Register":
+		msg := RegisterMsg{}
 		json.Unmarshal(rawMsg, &msg)
 		return msg
 

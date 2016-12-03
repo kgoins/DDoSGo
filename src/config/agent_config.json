@@ -1,4 +1,5 @@
 {
 	"handlerAddr": "127.0.0.1",
-    "handlerPort": "1337"
+    "handlerPort": "1337",
+    "traceroute" : ["10.15.64.1", "68.105.160.148"]
 }

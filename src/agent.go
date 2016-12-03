@@ -19,6 +19,11 @@ type Agent struct {
 	msgChannel         chan msgs.Msg
 	shutdown           chan bool
 
+	agent_ip     string
+	handler_ip   string
+	handler_port string
+	trace        []string
+
 	collector subsystems.DataCollector
 }
 
@@ -27,6 +32,11 @@ func NewAgent() (Agent, error) {
 
 	var handlerAddr string = agentConf.HandlerAddr + ":" + agentConf.HandlerPort
 	fmt.Println("Connecting to handler: " + handlerAddr)
+
+	aIp := getIP()
+	hIp := agentConf.HandlerAddr
+	hPort := agentConf.HandlerPort
+	tracert := agentConf.Traceroute
 
 	msgChannel := make(chan msgs.Msg)
 	shutdown := make(chan bool)
@@ -43,16 +53,27 @@ func NewAgent() (Agent, error) {
 		collectionInterval: collectionInterval,
 		collector:          collector,
 		shutdown:           shutdown,
-		msgChannel:         msgChannel}, err
+		msgChannel:         msgChannel,
+		agent_ip:           aIp,
+		handler_ip:         hIp,
+		handler_port:       hPort,
+		trace:              tracert}, err
 }
 
 func (agent Agent) Start() {
 	agent.signalHandler()
 
+	go agent.msgSender()
+
+	//Build and send register msg
+	regMsg := msgs.NewRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace)
+	//regMsg := msgs.NewRegisterMsg("192.168.0.8", "127.0.0.1")
+	agent.msgChannel <- regMsg
+
 	agent.collector.Start()
 
-	agent.msgSender()
-	// msgReceiver()
+	agent.msgReceiver()
+
 }
 
 func (agent Agent) Close() {
@@ -105,6 +126,8 @@ func (agent Agent) msgSender() {
 }
 
 func (agent Agent) msgReceiver() {
+	for {
+	}
 }
 
 func (agent Agent) ntwkErrHandler(err error) {
@@ -130,6 +153,24 @@ func (agent Agent) signalHandler() {
 		fmt.Println("OS SIGTERM received, agent shutting down")
 		agent.Close()
 	}()
+}
+
+func getIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		os.Stderr.WriteString("Oops: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+
+	for _, a := range addrs {
+		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	var foo string
+	return foo
 }
 
 // *** MAIN *** //

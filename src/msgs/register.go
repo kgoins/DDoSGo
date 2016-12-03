@@ -1,24 +1,24 @@
 package msgs
 
 type RegisterMsg struct {
-	agent_host   string
-	handler_host string
-	handler_port int
-	traceroute   []string
+	Agent_ip     string
+	Handler_ip   string
+	Handler_port string
+	Traceroute   []string
 }
 
-func NewRegisterMsg(aHost string, hHost string, port int, trace []string) RegisterMsg {
+func NewRegisterMsg(aIP string, hIP string, port string, trace []string) RegisterMsg {
 	return RegisterMsg{
-		agent_host:   aHost,
-		handler_host: hHost,
-		handler_port: port,
-		traceroute:   trace}
+		Agent_ip:     aIP,
+		Handler_ip:   hIP,
+		Handler_port: port,
+		Traceroute:   trace}
 }
 
 func (regMsg RegisterMsg) String() string {
-	return "type: register; payload: agent= " + regMsg.agent_host
+	return "type: register; payload: agent= " + regMsg.Agent_ip
 }
 
 func (regMsg RegisterMsg) GetType() string {
-	return "register"
+	return "Register"
 }

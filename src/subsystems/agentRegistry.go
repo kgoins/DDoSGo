@@ -23,10 +23,10 @@ Critical info about agent
 
 type AgentRecord struct {
 	//What makes up an agent record
-	agent_hostname   string
-	handler_hostname string
-	handler_port     int
-	traceroute       []string //An empty list, use append to add to it
+	agent_ip     string
+	handler_ip   string
+	handler_port int
+	traceroute   []string //An empty list, use append to add to it
 }
 
 /**
@@ -37,17 +37,17 @@ type AgentRecord struct {
  *@param list A slice which contains all of the routers between the agent and the interwebz
  *@return A reference to the agent record itself
  */
-func NewAgentRecord(aName string, hName string, port int, list []string) *AgentRecord {
+func NewAgentRecord(aIP string, hIP string, port int, list []string) *AgentRecord {
 
 	return &AgentRecord{
-		agent_hostname:   aName,
-		handler_hostname: hName,
-		handler_port:     port,
-		traceroute:       list}
+		agent_ip:     aIP,
+		handler_ip:   hIP,
+		handler_port: port,
+		traceroute:   list}
 }
 
 func (rec *AgentRecord) GetAgHostname() string {
-	return rec.agent_hostname
+	return rec.agent_ip
 }
 
 /************************************************************************************************/
@@ -91,7 +91,7 @@ func (reg *AgentRegistry) RemoveAgent(hostname string) {
  */
 func (reg *AgentRegistry) AddAgent(agent AgentRecord) {
 	//Adds and agent to the registry (hash map)
-	reg.registry[agent.handler_hostname] = agent
+	reg.registry[agent.handler_ip] = agent
 }
 
 /**
