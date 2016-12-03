@@ -1,18 +1,18 @@
 package msgs
 
-type DebugMsg struct {
+type Debug struct {
 	MsgText string
 	Id      int
 }
 
-func NewDebugMsg(msg string) DebugMsg {
-	return DebugMsg{MsgText: msg, Id: 12}
+func NewDebug(msg string) Debug {
+	return Debug{MsgText: msg, Id: 12}
 }
 
-func (debugMsg DebugMsg) String() string {
-	return "type: debug; payload: " + debugMsg.MsgText + string(debugMsg.Id)
+func (debug Debug) String() string {
+	return "type: Debug; payload: " + debug.MsgText + string(debug.Id)
 }
 
-func (debugMsg DebugMsg) GetType() string {
-	return "debug"
+func (debug Debug) GetType() string {
+	return "Debug"
 }
