@@ -10,6 +10,7 @@ import "syscall"
 import "os/signal"
 
 import "dispatcher"
+import "subsystems"
 
 // import "config"
 
@@ -19,6 +20,7 @@ type Handler struct {
 	maxBuff           int
 	dispatcherChannel chan dispatcher.Dispatchable
 	dispatcher        *dispatcher.Dispatcher
+	alertSystem       *subsystems.AlertSystem
 }
 
 var (
@@ -37,21 +39,25 @@ func NewHandler() *Handler {
 	workers := runtime.NumCPU() * 10 // TODO: read from conf
 	fmt.Println("Num workers: ", workers)
 	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, workers)
-
 	listenerSock, _ := net.Listen("tcp", port)
+
+	alertSystem := subsystems.NewAlertSystem(workers) // Setup alert system
 
 	return &Handler{
 		serverSock:        listenerSock,
 		maxWorkers:        workers,
 		maxBuff:           buff_size,
 		dispatcherChannel: dispatcherChannel,
-		dispatcher:        dispatcher}
+		dispatcher:        dispatcher,
+		alertSystem:       alertSystem,
+	}
 }
 
 func (handler *Handler) Run() {
 	fmt.Println("Starting Handler...")
 
 	handler.dispatcher.Run()
+	handler.alertSystem.Run()
 
 	handler.signalHandler()
 	handler.serve()
@@ -75,6 +81,7 @@ func (handler *Handler) serve() {
 
 func (handler *Handler) Close() {
 	handler.dispatcher.Close()
+	handler.alertSystem.Close()
 	handler.serverSock.Close()
 
 	close(handler.dispatcherChannel)
