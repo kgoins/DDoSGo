@@ -27,6 +27,7 @@ type AgentRecord struct {
 	handler_ip   string
 	handler_port int
 	traceroute   []string //An empty list, use append to add to it
+	updated      int
 }
 
 /**
@@ -43,7 +44,8 @@ func NewAgentRecord(aIP string, hIP string, port int, list []string) *AgentRecor
 		agent_ip:     aIP,
 		handler_ip:   hIP,
 		handler_port: port,
-		traceroute:   list}
+		traceroute:   list,
+		updated:      0}
 }
 
 func (rec *AgentRecord) GetAgHostname() string {
