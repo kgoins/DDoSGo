@@ -29,5 +29,5 @@ func (stream DataStream) String() string {
 }
 
 func (stream DataStream) BuildCmd() cmds.Cmd {
-	return cmds.NewProcDataStream(stream.Cpu, stream.Mem, stream.BytesRecvd, stream.BytesSent)
+	return cmds.NewProcDataStreamCmd(stream.Cpu, stream.Mem, stream.BytesRecvd, stream.BytesSent)
 }

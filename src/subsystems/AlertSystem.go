@@ -3,21 +3,20 @@ package subsystems
 import (
 	"dispatcher"
 	"fmt"
-	"outgoingMsg"
 	"time"
 )
 
 // Alert subsystem structure
 type AlertSystem struct {
+	agentReg		   *AgentRegistry
 	dispatcherChannel chan dispatcher.Dispatchable
 	dispatcher        *dispatcher.Dispatcher
-
 	monitorIntval int
 	shutdown      chan bool
 }
 
-// Init alert subsystem w/ given # of workers
-func NewAlertSystem(workers int, monitorIntval int) *AlertSystem {
+// Init alert subsystem w/ given # of workers, the agent registry to monitor, and the monitor interval
+func NewAlertSystem(agentReg *AgentRegistry, workers int, monitorIntval int) *AlertSystem {
 
 	shutdown := make(chan bool)
 	dispatcherChannel := make(chan dispatcher.Dispatchable)            // Setup dispatcherChannel non-buffered
@@ -26,6 +25,7 @@ func NewAlertSystem(workers int, monitorIntval int) *AlertSystem {
 
 	// Return new AlertSystem ref
 	return &AlertSystem{
+		agentReg: 		   agentReg,
 		dispatcherChannel: dispatcherChannel,
 		dispatcher:        dispatcher,
 		monitorIntval:     monitorIntval,
@@ -60,14 +60,10 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 				return
 			default:
 				fmt.Println("Checking Agent Registry For Unresponsive Agents...")
+				alertSystem.agentReg.CheckRecords()
 
 				time.Sleep(time.Second * time.Duration(alertSystem.monitorIntval))
 			}
 		}
 	}()
-}
-
-// For received DataStream evaluate if agent is under attack
-func (alertSystem *AlertSystem) ProcessDataStream(stream outgoingMsg.OutgoingDataStream) {
-
 }

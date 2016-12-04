@@ -31,7 +31,7 @@ type AgentRecord struct {
 	handler_ip   string
 	handler_port string
 	traceroute   []string //An empty list, use append to add to it
-	updated      int
+	updated      bool
 }
 
 /**
@@ -49,7 +49,7 @@ func NewAgentRecord(aIP string, hIP string, port string, list []string) *AgentRe
 		handler_ip:   hIP,
 		handler_port: port,
 		traceroute:   list,
-		updated:      0}
+		updated:      true}
 }
 
 func (rec *AgentRecord) GetAgHostname() string {
@@ -118,4 +118,26 @@ func (reg *AgentRegistry) ReturnTrace(hostname string) []string {
 	} else {
 		return nil
 	}
+}
+
+
+func (reg *AgentRegistry) CheckRecords() (bool, []AgentRecord) {
+	fmt.Println("Checking Registry Records...")
+
+	var clean = true
+	// unresponsiveRecords
+
+	for _, record := range reg.registry {
+		fmt.Println("Record\t", record)
+		if record.updated == true {
+			record.updated = false
+			reg.registry[record.agent_ip] = record
+
+		} else {
+			clean = false
+			fmt.Println("Record found unresponsive, signaling alert system")
+		}
+
+	}
+	return clean, nil
 }

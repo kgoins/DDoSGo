@@ -46,10 +46,10 @@ func NewHandler() *Handler {
 	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, workers)
 	listenerSock, _ := net.Listen("tcp", port)
 
-	monIntval := 30                                              // TODO: read from conf
-	alertSystem := subsystems.NewAlertSystem(workers, monIntval) // Setup alert system
-
 	agentReg := subsystems.NewAgentRegistry() // Setup agent registry
+
+	monIntval := 30                                              			// TODO: read from conf
+	alertSystem := subsystems.NewAlertSystem(agentReg, workers, monIntval) // Setup alert system
 
 	visitors.SetupVisitors(alertSystem, agentReg)
 

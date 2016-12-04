@@ -1,21 +1,29 @@
 package cmds
 
-import "fmt"
+import (
+	"fmt"
+	"subsystems"
+	"visitors"
+)
 
-type ProcDataStream struct {
+type ProcDataStreamCmd struct {
+	alertingSystem subsystems.AlertSystem
 	cpu        int
 	mem        int
 	bytesRecvd int
 	bytesSent  int
 }
 
-func NewProcDataStream(cpu int, mem int, bytesRecvd int, bytesSent int) ProcDataStream {
-	return ProcDataStream{cpu: cpu,
+func NewProcDataStreamCmd(cpu int, mem int, bytesRecvd int, bytesSent int) ProcDataStreamCmd {
+	return ProcDataStreamCmd{
+		alertingSystem: *visitors.AlertingVisitor.AlertingSys,
+		cpu: 		cpu,
 		mem:        mem,
 		bytesRecvd: bytesRecvd,
-		bytesSent:  bytesSent}
+		bytesSent:  bytesSent,
+	}
 }
 
-func (procStream ProcDataStream) ExecCmd() {
-	fmt.Println("From procStream cmd: ", procStream)
+func (procStreamCmd ProcDataStreamCmd) ExecCmd() {
+	fmt.Println("From procStream cmd: ", procStreamCmd)
 }
