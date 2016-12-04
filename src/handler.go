@@ -12,6 +12,8 @@ import "os/signal"
 import "dispatcher"
 import "subsystems"
 
+import "visitors"
+
 // import "config"
 
 type Handler struct {
@@ -21,7 +23,7 @@ type Handler struct {
 	dispatcherChannel chan dispatcher.Dispatchable
 	dispatcher        *dispatcher.Dispatcher
 	alertSystem       *subsystems.AlertSystem
-	agentReg		  *subsystems.AgentRegistry
+	agentReg          *subsystems.AgentRegistry
 }
 
 var (
@@ -47,6 +49,8 @@ func NewHandler() *Handler {
 
 	agentReg := subsystems.NewAgentRegistry() // Setup agent registry
 
+	visitors.SetupVisitors(alertSystem, agentReg)
+
 	return &Handler{
 		serverSock:        listenerSock,
 		maxWorkers:        workers,
@@ -54,7 +58,7 @@ func NewHandler() *Handler {
 		dispatcherChannel: dispatcherChannel,
 		dispatcher:        dispatcher,
 		alertSystem:       alertSystem,
-		agentReg: agentReg,
+		agentReg:          agentReg,
 	}
 }
 

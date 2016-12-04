@@ -1,10 +1,11 @@
 package visitors
 
 import "subsystems"
+import "fmt"
 
 var (
-	alertVisitor *AlertVisitor
-	agentRegVisitor *AgentRegistryVisitor
+	AlertingVisitor *AlertVisitor
+	AgentRegVisitor *AgentRegistryVisitor
 )
 
 type AlertVisitor struct {
@@ -23,8 +24,15 @@ func (alertVisitor *AlertVisitor) HeldInstance() *subsystems.AlertSystem {
 	return alertVisitor.alertingSys
 }
 
+func (Reg *AgentRegistryVisitor) HeldInstance() *subsystems.AgentRegistry {
+	return Reg.agentReg
+}
+
 func NewAgentRegistryVisitor(agentReg *subsystems.AgentRegistry) *AgentRegistryVisitor {
 	return &AgentRegistryVisitor{agentReg: agentReg}
 }
 
-
+func SetupVisitors(alertingSys *subsystems.AlertSystem, agentReg *subsystems.AgentRegistry) {
+	AlertingVisitor = NewAlertSystemVisitor(alertingSys)
+	AgentRegVisitor = NewAgentRegistryVisitor(agentReg)
+}
