@@ -16,14 +16,6 @@ type MsgBuilder struct {
 	Payload interface{}
 }
 
-func EncodeMsg(msg Msg) []byte {
-	builder := MsgBuilder{MsgType: msg.GetType(), Payload: msg}
-
-	builderData, _ := json.Marshal(builder)
-
-	return builderData
-}
-
 func BuildMsg(msgBytes []byte) Msg {
 	var rawMsg json.RawMessage
 	builder := MsgBuilder{

@@ -7,17 +7,19 @@ import "os"
 import "syscall"
 import "os/signal"
 
-import "msgs"
+import "outgoingMsg"
 import "config"
 
 import "dispatcher"
 import "subsystems"
 
+import "workers"
+
 type Agent struct {
 	handlerAddr        string
 	serverSock         net.Listener
 	collectionInterval int
-	msgChannel         chan msgs.Msg
+	msgChannel         chan outgoingMsg.OutgoingMsg
 	shutdown           chan bool
 
 	agent_ip     string
@@ -43,7 +45,7 @@ func NewAgent() (Agent, error) {
 	tracert := agentConf.Traceroute
 
 	dispatcherChannel := make(chan dispatcher.Dispatchable)
-	msgChannel := make(chan msgs.Msg)
+	msgChannel := make(chan outgoingMsg.OutgoingMsg)
 	shutdown := make(chan bool)
 
 	collectionInterval := 2
@@ -76,7 +78,7 @@ func (agent Agent) Start() {
 	go agent.msgSender()
 
 	//Build and send register msg
-	regMsg := msgs.NewRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, false)
+	regMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, false)
 	//regMsg := msgs.NewRegisterMsg("192.168.0.8", "127.0.0.1")
 	agent.msgChannel <- regMsg
 
@@ -88,7 +90,7 @@ func (agent Agent) Start() {
 }
 
 func (agent Agent) Close() {
-	closeRegMsg := msgs.NewRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, true)
+	closeRegMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, true)
 	agent.msgChannel <- closeRegMsg
 
 	agent.shutdown <- true
@@ -127,7 +129,7 @@ func (agent Agent) msgSender() {
 				agent.ntwkErrHandler(dialErr)
 			}
 
-			msgData := msgs.EncodeMsg(msg)
+			msgData := outgoingMsg.EncodeMsg(msg)
 
 			fmt.Println("sending message: " + msg.String())
 			_, writeErr := conn.Write(msgData)
@@ -147,7 +149,7 @@ func (agent Agent) msgReceiver() {
 			agent.ntwkErrHandler(err)
 		}
 
-		msgWork := dispatcher.NewMsgDispatchable(conn)
+		msgWork := workers.NewMsgDispatchable(conn)
 		agent.dispatcherChannel <- msgWork
 	}
 }

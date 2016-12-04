@@ -2,8 +2,8 @@ package subsystems
 
 import (
 	"dispatcher"
-	"msgs"
 	"fmt"
+	"outgoingMsg"
 	"time"
 )
 
@@ -68,7 +68,6 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 }
 
 // For received DataStream evaluate if agent is under attack
-func (alertSystem *AlertSystem) ProcessDataStream(stream msgs.DataStream) {
+func (alertSystem *AlertSystem) ProcessDataStream(stream outgoingMsg.OutgoingDataStream) {
 
 }
-

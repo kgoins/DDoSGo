@@ -10,17 +10,17 @@ import "io/ioutil"
 import "strings"
 import "strconv"
 
-import "msgs"
+import "outgoingMsg"
 import "fmt"
 
 type DataCollector struct {
-	msgChan       chan msgs.Msg
+	msgChan       chan outgoingMsg.OutgoingMsg
 	collectIntval int
 	sendIntval    int
 	shutdown      chan bool
 }
 
-func NewDataCollector(msgChan chan msgs.Msg, sendIntval int, collectIntval int) DataCollector {
+func NewDataCollector(msgChan chan outgoingMsg.OutgoingMsg, sendIntval int, collectIntval int) DataCollector {
 	shutdown := make(chan bool)
 	return DataCollector{
 		msgChan:       msgChan,
@@ -37,7 +37,7 @@ func (collector DataCollector) Start() {
 				return
 
 			default:
-				dataStream := collectData(collector.collectIntval)
+				dataStream := collectOutgoingData(collector.collectIntval)
 				collector.msgChan <- dataStream
 
 				time.Sleep(time.Second * time.Duration(collector.sendIntval))
@@ -54,12 +54,20 @@ func (collector DataCollector) Close() {
 
 // Data Collection
 
-func collectData(intVal int) msgs.DataStream {
+/*func collectData(intVal int) msgs.DataStream {
 	cpu := cpuUtil(intVal)
 	mem := memUtil()
 	bytesRecv, bytesSent := ntwkUtil(intVal)
 
 	return msgs.NewDataStream(cpu, mem, bytesRecv, bytesSent)
+}*/
+
+func collectOutgoingData(intVal int) outgoingMsg.OutgoingDataStream {
+	cpu := cpuUtil(intVal)
+	mem := memUtil()
+	bytesRecv, bytesSent := ntwkUtil(intVal)
+
+	return outgoingMsg.NewOutgoingDataStream(cpu, mem, bytesRecv, bytesSent)
 }
 
 // Calculates the current percentage CPU utilization

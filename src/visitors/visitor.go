@@ -1,7 +1,6 @@
 package visitors
 
 import "subsystems"
-import "fmt"
 
 var (
 	AlertingVisitor *AlertVisitor
