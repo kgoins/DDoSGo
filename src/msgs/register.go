@@ -28,5 +28,5 @@ func (regMsg RegisterMsg) GetType() string {
 }
 
 func (regMsg RegisterMsg) BuildCmd() cmds.Cmd {
-	return cmds.NewDebug("register_debug", 42)
+	return cmds.NewRegisterCmd(regMsg.Agent_ip, regMsg.Handler_ip, regMsg.Handler_port, regMsg.Traceroute, regMsg.AddRemoveFlag)
 }

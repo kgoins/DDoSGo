@@ -93,14 +93,14 @@ func (agent Agent) Close() {
 	closeRegMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, true)
 	agent.msgChannel <- closeRegMsg
 
-	agent.shutdown <- true
-
 	agent.serverSock.Close()
 	agent.collector.Close()
 	agent.dispatcher.Close()
 
 	close(agent.msgChannel)
 	close(agent.shutdown)
+
+	agent.shutdown <- true
 
 	fmt.Println("agent closed")
 	os.Exit(1)

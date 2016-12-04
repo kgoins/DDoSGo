@@ -3,6 +3,7 @@ package subsystems
 import (
 	"fmt"
 )
+
 /*AGENT REGISTRY- handler side
 Initialized with this.start function
 
@@ -28,7 +29,7 @@ type AgentRecord struct {
 	//What makes up an agent record
 	agent_ip     string
 	handler_ip   string
-	handler_port int
+	handler_port string
 	traceroute   []string //An empty list, use append to add to it
 	updated      int
 }
@@ -41,7 +42,7 @@ type AgentRecord struct {
  *@param list A slice which contains all of the routers between the agent and the interwebz
  *@return A reference to the agent record itself
  */
-func NewAgentRecord(aIP string, hIP string, port int, list []string) *AgentRecord {
+func NewAgentRecord(aIP string, hIP string, port string, list []string) *AgentRecord {
 
 	return &AgentRecord{
 		agent_ip:     aIP,
@@ -83,10 +84,10 @@ func NewAgentRegistry() *AgentRegistry {
  *If the hostname is not found in the registry nothing is done
  *@param hostname A string representing the host name of the agent to be removed
  */
-func (reg *AgentRegistry) RemoveAgent(hostname string) {
+func (reg *AgentRegistry) RemoveAgent(agentIP string) {
 	//Removes an agent from the list of registered agents
 
-	delete(reg.registry, hostname)
+	delete(reg.registry, agentIP)
 	//if hosname does not exist, delete does nothing
 }
 
@@ -97,7 +98,7 @@ func (reg *AgentRegistry) RemoveAgent(hostname string) {
  */
 func (reg *AgentRegistry) AddAgent(agent AgentRecord) {
 	//Adds and agent to the registry (hash map)
-	reg.registry[agent.handler_ip] = agent
+	reg.registry[agent.agent_ip] = agent
 }
 
 /**

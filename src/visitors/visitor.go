@@ -8,27 +8,27 @@ var (
 )
 
 type AlertVisitor struct {
-	alertingSys *subsystems.AlertSystem
+	AlertingSys *subsystems.AlertSystem
 }
 
 type AgentRegistryVisitor struct {
-	agentReg *subsystems.AgentRegistry
+	AgentReg *subsystems.AgentRegistry
 }
 
 func NewAlertSystemVisitor(alertingSys *subsystems.AlertSystem) *AlertVisitor {
-	return &AlertVisitor{alertingSys: alertingSys}
+	return &AlertVisitor{AlertingSys: alertingSys}
 }
 
 func (alertVisitor *AlertVisitor) HeldInstance() *subsystems.AlertSystem {
-	return alertVisitor.alertingSys
+	return alertVisitor.AlertingSys
 }
 
 func (Reg *AgentRegistryVisitor) HeldInstance() *subsystems.AgentRegistry {
-	return Reg.agentReg
+	return Reg.AgentReg
 }
 
 func NewAgentRegistryVisitor(agentReg *subsystems.AgentRegistry) *AgentRegistryVisitor {
-	return &AgentRegistryVisitor{agentReg: agentReg}
+	return &AgentRegistryVisitor{AgentReg: agentReg}
 }
 
 func SetupVisitors(alertingSys *subsystems.AlertSystem, agentReg *subsystems.AgentRegistry) {
