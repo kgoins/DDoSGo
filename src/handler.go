@@ -14,6 +14,8 @@ import "subsystems"
 
 import "visitors"
 
+import "workers"
+
 // import "config"
 
 type Handler struct {
@@ -79,7 +81,7 @@ func (handler *Handler) serve() {
 			handler.serverErrHandler(err)
 		}
 
-		msgWork := dispatcher.NewMsgDispatchable(conn)
+		msgWork := workers.NewMsgDispatchable(conn)
 		handler.dispatcherChannel <- msgWork
 
 		chanCap = getMax(chanCap, len(handler.dispatcherChannel))
