@@ -1,5 +1,8 @@
 package subsystems
 
+import (
+	"fmt"
+)
 /*AGENT REGISTRY- handler side
 Initialized with this.start function
 
@@ -64,11 +67,12 @@ type AgentRegistry struct {
  *The constructor for the AgentRegistry
  *Initializes a hash map to store the future AgentRecords
  */
-func Start() *AgentRegistry {
+func NewAgentRegistry() *AgentRegistry {
 	//Initialize a hash map for agents
 	//Return a pointer to an agent registry
 	//Is the constructor
 	reg := make(map[string]AgentRecord)
+	fmt.Println("Setting Up New Agent Registry...")
 
 	return &AgentRegistry{
 		registry: reg}

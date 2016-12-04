@@ -21,6 +21,7 @@ type Handler struct {
 	dispatcherChannel chan dispatcher.Dispatchable
 	dispatcher        *dispatcher.Dispatcher
 	alertSystem       *subsystems.AlertSystem
+	agentReg		  *subsystems.AgentRegistry
 }
 
 var (
@@ -44,6 +45,8 @@ func NewHandler() *Handler {
 	monIntval := 30                                              // TODO: read from conf
 	alertSystem := subsystems.NewAlertSystem(workers, monIntval) // Setup alert system
 
+	agentReg := subsystems.NewAgentRegistry() // Setup agent registry
+
 	return &Handler{
 		serverSock:        listenerSock,
 		maxWorkers:        workers,
@@ -51,6 +54,7 @@ func NewHandler() *Handler {
 		dispatcherChannel: dispatcherChannel,
 		dispatcher:        dispatcher,
 		alertSystem:       alertSystem,
+		agentReg: agentReg,
 	}
 }
 
@@ -59,13 +63,7 @@ func (handler *Handler) Run() {
 
 	handler.dispatcher.Run()
 	handler.alertSystem.Run()
-
 	handler.signalHandler()
-
-	//Intitalize the Agent Registry
-	fmt.Println("Starting Agent Registry...")
-	subsystems.Start()
-
 	handler.serve()
 }
 
