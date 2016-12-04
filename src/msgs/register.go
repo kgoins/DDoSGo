@@ -1,5 +1,7 @@
 package msgs
 
+import "cmds"
+
 type RegisterMsg struct {
 	Agent_ip      string
 	Handler_ip    string
@@ -23,4 +25,8 @@ func (regMsg RegisterMsg) String() string {
 
 func (regMsg RegisterMsg) GetType() string {
 	return "Register"
+}
+
+func (regMsg RegisterMsg) BuildCmd() cmds.Cmd {
+	return cmds.NewDebug("register_debug", 42)
 }

@@ -11,6 +11,7 @@ import "strings"
 import "strconv"
 
 import "msgs"
+import "fmt"
 
 type DataCollector struct {
 	msgChan       chan msgs.Msg
@@ -47,6 +48,7 @@ func (collector DataCollector) Start() {
 
 func (collector DataCollector) Close() {
 	collector.shutdown <- true
+	fmt.Println("made it")
 	close(collector.shutdown)
 }
 

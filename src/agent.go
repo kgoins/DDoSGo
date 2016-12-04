@@ -10,6 +10,7 @@ import "os/signal"
 import "msgs"
 import "config"
 
+import "dispatcher"
 import "subsystems"
 
 type Agent struct {
@@ -25,6 +26,9 @@ type Agent struct {
 	trace        []string
 
 	collector subsystems.DataCollector
+
+	dispatcherChannel chan dispatcher.Dispatchable
+	dispatcher        *dispatcher.Dispatcher
 }
 
 func NewAgent() (Agent, error) {
@@ -38,12 +42,16 @@ func NewAgent() (Agent, error) {
 	hPort := agentConf.HandlerPort
 	tracert := agentConf.Traceroute
 
+	dispatcherChannel := make(chan dispatcher.Dispatchable)
 	msgChannel := make(chan msgs.Msg)
 	shutdown := make(chan bool)
 
 	collectionInterval := 2
 	sendInterval := 5
 	collector := subsystems.NewDataCollector(msgChannel, collectionInterval, sendInterval)
+
+	numWorkers := 2 // TODO: read from conf
+	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, numWorkers)
 
 	port := ":1338" // TODO: read from conf
 	serverSock, _ := net.Listen("tcp", port)
@@ -52,6 +60,8 @@ func NewAgent() (Agent, error) {
 		serverSock:         serverSock,
 		collectionInterval: collectionInterval,
 		collector:          collector,
+		dispatcher:         dispatcher,
+		dispatcherChannel:  dispatcherChannel,
 		shutdown:           shutdown,
 		msgChannel:         msgChannel,
 		agent_ip:           aIp,
@@ -71,9 +81,10 @@ func (agent Agent) Start() {
 	agent.msgChannel <- regMsg
 
 	agent.collector.Start()
+	agent.dispatcher.Run()
 
+	go agent.msgSender()
 	agent.msgReceiver()
-
 }
 
 func (agent Agent) Close() {
@@ -82,8 +93,9 @@ func (agent Agent) Close() {
 
 	agent.shutdown <- true
 
-	agent.collector.Close()
 	agent.serverSock.Close()
+	agent.collector.Close()
+	agent.dispatcher.Close()
 
 	close(agent.msgChannel)
 	close(agent.shutdown)
@@ -130,6 +142,13 @@ func (agent Agent) msgSender() {
 
 func (agent Agent) msgReceiver() {
 	for {
+		conn, err := agent.serverSock.Accept()
+		if err != nil {
+			agent.ntwkErrHandler(err)
+		}
+
+		msgWork := dispatcher.NewMsgDispatchable(conn)
+		agent.dispatcherChannel <- msgWork
 	}
 }
 
@@ -138,7 +157,7 @@ func (agent Agent) ntwkErrHandler(err error) {
 	case *net.OpError:
 		if errType.Op == "accept" {
 			println("Server socket closed, shutting down")
-			agent.Close()
+			// agent.Close()
 		}
 
 	default:
@@ -172,11 +191,11 @@ func getIP() string {
 			}
 		}
 	}
-	var foo string
-	return foo
+	var errStr string
+	return errStr
 }
 
-// *** MAIN *** //
+// *** AGENT'S MAIN *** //
 func main() {
 	agent, newAgentErr := NewAgent()
 	if newAgentErr != nil {

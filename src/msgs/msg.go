@@ -1,11 +1,12 @@
 package msgs
 
-// import "Cmd"
 import "encoding/json"
 import "fmt"
 
+import "cmds"
+
 type Msg interface {
-	// BuildCommand()
+	BuildCmd() cmds.Cmd
 	String() string
 	GetType() string
 }

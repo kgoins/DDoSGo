@@ -5,7 +5,7 @@
 
 src/agent
 src/handler
-src/logs/
+src/logs/*
 
 # Folders
 _obj

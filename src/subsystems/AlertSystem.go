@@ -9,6 +9,9 @@ import (
 type AlertSystem struct {
 	dispatcherChannel chan dispatcher.Dispatchable
 	dispatcher        *dispatcher.Dispatcher
+
+	monitorIntval int
+	shutdown      chan bool
 }
 
 // Init alert subsystem w/ given # of workers
