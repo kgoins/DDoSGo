@@ -48,7 +48,7 @@ func NewHandler() *Handler {
 
 	agentReg := subsystems.NewAgentRegistry() // Setup agent registry
 
-	monIntval := 30                                              			// TODO: read from conf
+	monIntval := 8                                              			// TODO: read from conf
 	alertSystem := subsystems.NewAlertSystem(agentReg, workers, monIntval) // Setup alert system
 
 	visitors.SetupVisitors(alertSystem, agentReg)
