@@ -1,4 +1,4 @@
-package main
+package subsystems
 
 import (
 	"github.com/google/gopacket"
@@ -13,7 +13,100 @@ import (
 	"strconv"
 )
 
-func callIptables(action string, queueNum int) {
+// static vars needed for DecodeLayers to run
+var (
+	icmpLayer layers.ICMPv4
+	ipLayer   layers.IPv4
+
+	tcpLayer layers.TCP
+	udpLayer layers.UDP
+
+	dnsLayer layers.DNS
+)
+
+type Enforcer struct {
+	killsig  chan bool
+	nfq      *nfqueue.NFQueue
+	queueNum int
+}
+
+func NewEnforcer() *Enforcer {
+	queueNum := 12 // From agent's conf??
+
+	killsig := make(chan bool)
+	nfq := nfqueue.NewNFQueue(uint16(queueNum))
+
+	return &Enforcer{killsig: killsig,
+		queueNum: queueNum,
+		nfq:      nfq}
+}
+
+func (enforcer *Enforcer) Start() {
+	iptables("start", enforcer.queueNum)
+
+	go startNFQ(enforcer.queueNum)
+}
+
+func (enforcer *Enforcer) Stop() {
+	enforcer.killsig <- true
+	enforcer.nfq.Close()
+
+	iptables("stop", enforcer.queueNum)
+}
+
+func (enforcer *Enforcer) Close() {
+	enforcer.Stop()
+	close(enforcer.killsig)
+}
+
+func (enforcer *Enforcer) startNFQ() {
+	fmt.Println("starting packet filter")
+
+	nfqPacketChan, err := enforcer.nfq.Open()
+	if err != nil {
+		fmt.Printf("Error opening NFQueue: %v\n", err)
+		os.Exit(1)
+	}
+
+	for nfqPacket := range nfqPacketChan {
+		if <-enforcer.killsig {
+			return
+		}
+
+		filterPacket(nfqPacket)
+	}
+}
+
+func filterPacket(nfqPacket *nfqueue.NFQPacket) {
+	fmt.Println("Processing packet")
+
+	if isPacketBad(nfqPacket.Packet) {
+		nfqPacket.Accept()
+	} else {
+		nfqPacket.Drop()
+	}
+}
+
+func isPacketBad(packet gopacket.Packet) bool {
+	packetLayers := getPacketLayers(packet.Data())
+
+	for _, layer := range packetLayers {
+		if layer == layers.LayerTypeIPv4 {
+			fmt.Println("IPv4: ", ipLayer.SrcIP, "->", ipLayer.DstIP)
+		}
+
+		if layer == layers.LayerTypeICMPv4 {
+			fmt.Println("dropping icmp")
+			// return false
+			return true
+		}
+	}
+
+	return true
+}
+
+// Utility functions
+func iptables(action string, queueNum int) {
 	var arg string
 
 	switch action {
@@ -36,42 +129,6 @@ func callIptables(action string, queueNum int) {
 	}
 }
 
-func startNFQ(queueNum int) {
-	nfq := nfqueue.NewNFQueue(uint16(queueNum))
-	fmt.Println("running queue")
-
-	nfqPacketStream, err := nfq.Open()
-	if err != nil {
-		fmt.Printf("Error opening NFQueue: %v\n", err)
-		os.Exit(1)
-	}
-	defer nfq.Close()
-
-	for nfqPacket := range nfqPacketStream {
-		filterPacket(nfqPacket)
-	}
-}
-
-func filterPacket(nfqPacket *nfqueue.NFQPacket) {
-	fmt.Println("Processing packet")
-
-	if isPacketBad(nfqPacket.Packet) {
-		nfqPacket.Accept()
-	} else {
-		nfqPacket.Drop()
-	}
-}
-
-var (
-	icmpLayer layers.ICMPv4
-	ipLayer   layers.IPv4
-
-	tcpLayer layers.TCP
-	udpLayer layers.UDP
-
-	dnsLayer layers.DNS
-)
-
 func getPacketLayers(packetData []byte) []gopacket.LayerType {
 
 	parser := gopacket.NewDecodingLayerParser(
@@ -91,35 +148,12 @@ func getPacketLayers(packetData []byte) []gopacket.LayerType {
 	return foundLayerTypes
 }
 
-func isPacketBad(packet gopacket.Packet) bool {
-	packetLayers := getPacketLayers(packet.Data())
+// func main() {
+// 	queueNum := 12
 
-	for _, layer := range packetLayers {
-		if layer == layers.LayerTypeIPv4 {
-			fmt.Println("IPv4: ", ipLayer.SrcIP, "->", ipLayer.DstIP)
-		}
+// 	iptables("start", queueNum)
 
-		if layer == layers.LayerTypeICMPv4 {
-			fmt.Println("dropping icmp")
-			// return false
-			return true
-		}
+// 	startNFQ(queueNum)
 
-		// if layerType == layers.LayerTypeTCP {
-		// 	fmt.Println("TCP Port: ", tcpLayer.SrcPort, "->", tcpLayer.DstPort)
-		// 	fmt.Println("TCP SYN:", tcpLayer.SYN, " | ACK:", tcpLayer.ACK)
-		// }
-	}
-
-	return true
-}
-
-func main() {
-	queueNum := 12
-
-	callIptables("start", queueNum)
-
-	startNFQ(queueNum)
-
-	callIptables("stop", queueNum)
-}
+// 	iptables("stop", queueNum)
+// }
