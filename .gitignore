@@ -6,6 +6,7 @@
 src/agent
 src/handler
 src/logs/*
+src/github.com/google/*
 
 # Folders
 _obj
