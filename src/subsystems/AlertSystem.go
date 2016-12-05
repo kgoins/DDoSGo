@@ -35,6 +35,7 @@ func NewAlertSystem(agentReg *AgentRegistry, workers int, monitorIntval int) *Al
 
 // Close alert subsystem connections
 func (alertSystem *AlertSystem) Close() {
+	fmt.Println("Closing Alert System")
 	alertSystem.shutdown <- true
 
 	alertSystem.dispatcher.Close()

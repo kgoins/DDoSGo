@@ -12,10 +12,10 @@ type OutgoingMsgBuilder struct {
 	Payload interface{}
 }
 
-func EncodeMsg(msg OutgoingMsg) []byte {
+func EncodeMsg(msg OutgoingMsg) ([]byte, error) {
 	builder := OutgoingMsgBuilder{MsgType: msg.GetType(), Payload: msg}
 
-	builderData, _ := json.Marshal(builder)
+	builderData, err := json.Marshal(builder)
 
-	return builderData
+	return builderData, err
 }

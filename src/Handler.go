@@ -44,7 +44,12 @@ func NewHandler() *Handler {
 	workers := runtime.NumCPU() * 10 // TODO: read from conf
 	fmt.Println("Num workers: ", workers)
 	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, workers)
-	listenerSock, _ := net.Listen("tcp", port)
+
+	listenerSock, sockErr := net.Listen("tcp", port)
+	if sockErr != nil {
+		fmt.Println("Error binding server socket")
+		os.Exit(2)
+	}
 
 	agentReg := subsystems.NewAgentRegistry() // Setup agent registry
 
@@ -93,6 +98,7 @@ func (handler *Handler) Close() {
 
 	handler.dispatcher.Close()
 	handler.alertSystem.Close()
+
 	fmt.Println("closing server sock")
 	handler.serverSock.Close()
 

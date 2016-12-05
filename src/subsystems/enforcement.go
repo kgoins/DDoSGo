@@ -25,7 +25,6 @@ var (
 )
 
 type Enforcer struct {
-	killsig  chan bool
 	nfq      *nfqueue.NFQueue
 	queueNum int
 }
@@ -33,11 +32,9 @@ type Enforcer struct {
 func NewEnforcer() *Enforcer {
 	queueNum := 12 // From agent's conf??
 
-	killsig := make(chan bool)
 	nfq := nfqueue.NewNFQueue(uint16(queueNum))
 
 	return &Enforcer{
-		killsig:  killsig,
 		queueNum: queueNum,
 		nfq:      nfq}
 }
@@ -46,20 +43,19 @@ func (enforcer *Enforcer) Close() {
 	fmt.Println("closing enforcer")
 
 	enforcer.Stop()
-	close(enforcer.killsig)
+
+	fmt.Println("Enforcer Closed")
 }
 
 func (enforcer *Enforcer) Start() {
 
 	iptables("start", enforcer.queueNum)
-
-	fmt.Println("made it")
 	go enforcer.startNFQ()
 }
 
 func (enforcer *Enforcer) Stop() {
-	enforcer.killsig <- true
 	enforcer.nfq.Close()
+	fmt.Println("Closing nfq")
 
 	iptables("stop", enforcer.queueNum)
 }
@@ -70,16 +66,17 @@ func (enforcer *Enforcer) startNFQ() {
 	nfqPacketChan, err := enforcer.nfq.Open()
 	if err != nil {
 		fmt.Printf("Error opening NFQueue: %v\n", err)
-		os.Exit(1)
+		return
 	}
 
+	fmt.Println("filtering packets")
 	for nfqPacket := range nfqPacketChan {
-		if <-enforcer.killsig {
-			return
-		}
 
+		fmt.Println("made it to the actual filter")
 		filterPacket(nfqPacket)
 	}
+
+	fmt.Println("exiting NFQ")
 }
 
 func filterPacket(nfqPacket *nfqueue.NFQPacket) {
@@ -101,7 +98,7 @@ func isPacketBad(packet gopacket.Packet) bool {
 		}
 
 		if layer == layers.LayerTypeICMPv4 {
-			fmt.Println("dropping icmp")
+			fmt.Println("found icmp")
 			// return false
 			return true
 		}

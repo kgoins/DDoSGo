@@ -2,6 +2,7 @@ package main
 
 import "net"
 import "fmt"
+import "errors"
 
 import "os"
 import "syscall"
@@ -40,7 +41,7 @@ func NewAgent() (Agent, error) {
 	var handlerAddr string = agentConf.HandlerAddr + ":" + agentConf.HandlerPort
 	fmt.Println("Connecting to handler: " + handlerAddr)
 
-	aIp := getIP()
+	aIp, _ := getIP()
 	hIp := agentConf.HandlerAddr
 	hPort := agentConf.HandlerPort
 	tracert := agentConf.Traceroute
@@ -82,11 +83,11 @@ func NewAgent() (Agent, error) {
 func (agent Agent) Start() {
 	agent.signalHandler()
 
-	go agent.msgSender()
-
 	//Build and send register msg
 	regMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, false)
-	agent.msgChannel <- regMsg
+	agent.sendMsg(regMsg)
+
+	go agent.msgSender()
 
 	// Start subsystems
 	agent.enforcer.Start()
@@ -94,24 +95,32 @@ func (agent Agent) Start() {
 	agent.dispatcher.Run()
 
 	agent.msgReceiver()
+
+	fmt.Println("Msg Receiver died, waiting on Close")
+	<-agent.shutdown
 }
 
 func (agent Agent) Close() {
-	closeRegMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, true)
-	agent.msgChannel <- closeRegMsg
-
-	agent.serverSock.Close()
-	fmt.Println("made it")
+	fmt.Println("Closing subsystems")
 	agent.collector.Close()
 	agent.dispatcher.Close()
 	agent.enforcer.Close()
+	fmt.Println("All Subsystems Closed")
+
+	closeRegMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, true)
+	agent.sendMsg(closeRegMsg)
+	fmt.Println("Sent shutdown Msg to Handler")
+
+	agent.shutdown <- true
+
+	agent.serverSock.Close()
+	fmt.Println("Server Sock Closed")
 
 	close(agent.msgChannel)
 	close(agent.shutdown)
 
-	agent.shutdown <- true
-
 	fmt.Println("agent closed")
+
 	os.Exit(1)
 }
 
@@ -130,25 +139,39 @@ func (agent Agent) msgSender() {
 	for {
 		select {
 		case <-agent.shutdown:
+			fmt.Println("Msg Sender Closing")
 			return
 
 		case msg := <-agent.msgChannel:
-			conn, dialErr := agent.dialHandler()
-			if dialErr != nil {
-				agent.ntwkErrHandler(dialErr)
+			sendErr := agent.sendMsg(msg)
+			if sendErr != nil {
+				fmt.Println(sendErr)
 			}
-
-			msgData := outgoingMsg.EncodeMsg(msg)
-
-			fmt.Println("sending message: " + msg.String())
-			_, writeErr := conn.Write(msgData)
-			if writeErr != nil {
-				agent.ntwkErrHandler(writeErr)
-			}
-
-			conn.Close()
 		}
 	}
+}
+
+func (agent Agent) sendMsg(msg outgoingMsg.OutgoingMsg) error {
+	msgBytes, encodeErr := outgoingMsg.EncodeMsg(msg)
+	if encodeErr != nil {
+		fmt.Println("Error encoding message")
+		return encodeErr
+	}
+
+	conn, err := agent.dialHandler()
+	defer conn.Close()
+	if err != nil {
+		fmt.Println("err dialing handler", err)
+		return err
+	}
+
+	fmt.Println("sending message: " + msg.String())
+	_, err = conn.Write(msgBytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return err
 }
 
 func (agent Agent) msgReceiver() {
@@ -173,7 +196,7 @@ func (agent Agent) ntwkErrHandler(err error) {
 		}
 
 	default:
-		fmt.Println(err)
+		fmt.Println("Unknown network error:", err)
 		agent.Close()
 	}
 }
@@ -189,22 +212,24 @@ func (agent Agent) signalHandler() {
 	}()
 }
 
-func getIP() string {
+func getIP() (string, error) {
+	ipStr := ""
+
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
 		os.Stderr.WriteString("Oops: " + err.Error() + "\n")
-		os.Exit(1)
+		return ipStr, err
 	}
 
 	for _, a := range addrs {
 		if ipnet, ok := a.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				return ipnet.IP.String()
+				return ipnet.IP.String(), nil
 			}
 		}
 	}
-	var errStr string
-	return errStr
+
+	return ipStr, errors.New("Unable to obtain agent IP")
 }
 
 // *** AGENT'S MAIN *** //

@@ -56,19 +56,12 @@ func (collector *DataCollector) Start() {
 
 func (collector *DataCollector) Close() {
 	collector.shutdown <- true
-	fmt.Println("made it")
 	close(collector.shutdown)
+
+	fmt.Println("Data Collector Closed")
 }
 
 // Data Collection
-
-/*func collectData(intVal int) msgs.DataStream {
-	cpu := cpuUtil(intVal)
-	mem := memUtil()
-	bytesRecv, bytesSent := ntwkUtil(intVal)
-
-	return msgs.NewDataStream(cpu, mem, bytesRecv, bytesSent)
-}*/
 
 func collectOutgoingData(agent_ip string, handler_ip string, handler_port string, intVal int) outgoingMsg.OutgoingDataStream {
 	cpu := cpuUtil(intVal)
