@@ -124,20 +124,19 @@ func (reg *AgentRegistry) ReturnTrace(hostname string) []string {
 func (reg *AgentRegistry) CheckRecords() (bool, []AgentRecord) {
 	fmt.Println("Checking Registry Records...")
 
-	var clean = true
-	// unresponsiveRecords
+	var clean = true                         // Test for unresponsive records
+	var unresponsiveRecords []AgentRecord	 // The unresponsive records
 
+	// Loop through registry and check records
 	for _, record := range reg.registry {
-		fmt.Println("Record\t", record)
 		if record.updated == true {
-			record.updated = false
-			reg.registry[record.agent_ip] = record
-
+			record.updated = false								// If record was updated in last interval, mark rest to false
+			reg.registry[record.agent_ip] = record              // Reset record into registry
 		} else {
-			clean = false
-			fmt.Println("Record found unresponsive, signaling alert system")
+			clean = false                                             // Record was found unresponsive, we have to signal alerts
+			unresponsiveRecords = append(unresponsiveRecords, record) // Append record to collection for return to the alert
 		}
 
 	}
-	return clean, nil
+	return clean, unresponsiveRecords
 }

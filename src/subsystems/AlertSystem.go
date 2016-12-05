@@ -60,9 +60,17 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 				return
 			default:
 				fmt.Println("Checking Agent Registry For Unresponsive Agents...")
-				alertSystem.agentReg.CheckRecords()
+				clean, records := alertSystem.agentReg.CheckRecords()                // Check registry for records
+				if clean != true {                                                   // Records found unresponsive
+                        fmt.Println("Records Reported Unresponsive")
+                       	for _, record := range records {
+                       		fmt.Println(record)
+                       	}
+					} else {														 // No records found unresponsive
+						fmt.Println("No Records Reported Unresponsive")
+					}
 
-				time.Sleep(time.Second * time.Duration(alertSystem.monitorIntval))
+				time.Sleep(time.Second * time.Duration(alertSystem.monitorIntval))   // Rest for interval length
 			}
 		}
 	}()
