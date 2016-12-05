@@ -36,15 +36,25 @@ func NewEnforcer() *Enforcer {
 	killsig := make(chan bool)
 	nfq := nfqueue.NewNFQueue(uint16(queueNum))
 
-	return &Enforcer{killsig: killsig,
+	return &Enforcer{
+		killsig:  killsig,
 		queueNum: queueNum,
 		nfq:      nfq}
 }
 
+func (enforcer *Enforcer) Close() {
+	fmt.Println("closing enforcer")
+
+	enforcer.Stop()
+	close(enforcer.killsig)
+}
+
 func (enforcer *Enforcer) Start() {
+
 	iptables("start", enforcer.queueNum)
 
-	go startNFQ(enforcer.queueNum)
+	fmt.Println("made it")
+	go enforcer.startNFQ()
 }
 
 func (enforcer *Enforcer) Stop() {
@@ -52,11 +62,6 @@ func (enforcer *Enforcer) Stop() {
 	enforcer.nfq.Close()
 
 	iptables("stop", enforcer.queueNum)
-}
-
-func (enforcer *Enforcer) Close() {
-	enforcer.Stop()
-	close(enforcer.killsig)
 }
 
 func (enforcer *Enforcer) startNFQ() {

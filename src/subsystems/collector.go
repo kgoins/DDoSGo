@@ -14,28 +14,30 @@ import "outgoingMsg"
 import "fmt"
 
 type DataCollector struct {
-	agent_ip		string
-	handler_ip		string
-	handler_port	string
+	agent_ip      string
+	handler_ip    string
+	handler_port  string
 	msgChan       chan outgoingMsg.OutgoingMsg
 	collectIntval int
 	sendIntval    int
 	shutdown      chan bool
 }
 
-func NewDataCollector(agent_ip string, handler_ip string, handler_port string, msgChan chan outgoingMsg.OutgoingMsg, sendIntval int, collectIntval int) DataCollector {
+func NewDataCollector(agent_ip string, handler_ip string, handler_port string,
+	msgChan chan outgoingMsg.OutgoingMsg, sendIntval int, collectIntval int) *DataCollector {
+
 	shutdown := make(chan bool)
-	return DataCollector{
-		agent_ip: agent_ip,
-		handler_ip: handler_ip,
-		handler_port: handler_port,
+	return &DataCollector{
+		agent_ip:      agent_ip,
+		handler_ip:    handler_ip,
+		handler_port:  handler_port,
 		msgChan:       msgChan,
 		sendIntval:    sendIntval,
 		collectIntval: collectIntval,
 		shutdown:      shutdown}
 }
 
-func (collector DataCollector) Start() {
+func (collector *DataCollector) Start() {
 	go func() {
 		for {
 			select {
@@ -52,7 +54,7 @@ func (collector DataCollector) Start() {
 	}()
 }
 
-func (collector DataCollector) Close() {
+func (collector *DataCollector) Close() {
 	collector.shutdown <- true
 	fmt.Println("made it")
 	close(collector.shutdown)

@@ -8,11 +8,11 @@ import (
 
 // Alert subsystem structure
 type AlertSystem struct {
-	agentReg		   *AgentRegistry
+	agentReg          *AgentRegistry
 	dispatcherChannel chan dispatcher.Dispatchable
 	dispatcher        *dispatcher.Dispatcher
-	monitorIntval int
-	shutdown      chan bool
+	monitorIntval     int
+	shutdown          chan bool
 }
 
 // Init alert subsystem w/ given # of workers, the agent registry to monitor, and the monitor interval
@@ -25,7 +25,7 @@ func NewAlertSystem(agentReg *AgentRegistry, workers int, monitorIntval int) *Al
 
 	// Return new AlertSystem ref
 	return &AlertSystem{
-		agentReg: 		   agentReg,
+		agentReg:          agentReg,
 		dispatcherChannel: dispatcherChannel,
 		dispatcher:        dispatcher,
 		monitorIntval:     monitorIntval,
@@ -35,16 +35,19 @@ func NewAlertSystem(agentReg *AgentRegistry, workers int, monitorIntval int) *Al
 
 // Close alert subsystem connections
 func (alertSystem *AlertSystem) Close() {
-	// Close dispatcher connections & channel
 	alertSystem.shutdown <- true
+
 	alertSystem.dispatcher.Close()
+	fmt.Println("Alert System Closed")
+
 	close(alertSystem.dispatcherChannel)
 }
 
 // Run alert subsystem
 func (alertSystem *AlertSystem) Run() {
-	alertSystem.MonitorRegistry()
+
 	alertSystem.dispatcher.Run()
+	alertSystem.MonitorRegistry()
 }
 
 // Check agent registry on timed interval (30 seconds) for unflagged agents
@@ -53,26 +56,26 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 		for {
 			select {
 			case <-alertSystem.shutdown:
+				fmt.Println("Alert System shutting down")
 				return
 			default:
 				fmt.Println("Checking Agent Registry For Unresponsive Agents...")
-				clean, records := alertSystem.agentReg.CheckRecords()                // Check registry for records
-				if clean != true {                                                   // Records found unresponsive
-                        fmt.Println("Records Reported Unresponsive")
-                       	for _, record := range records {
-                       		fmt.Println(record)
-                       	}
-                       	// Start alert system
-					} else {														 // No records found unresponsive
-						fmt.Println("No Records Reported Unresponsive")
+				clean, records := alertSystem.agentReg.CheckRecords() // Check registry for records
+				if clean != true {                                    // Records found unresponsive
+					fmt.Println("Records Reported Unresponsive")
+					for _, record := range records {
+						fmt.Println(record)
 					}
+					// Start alert system
+				} else { // No records found unresponsive
+					fmt.Println("No Records Reported Unresponsive")
+				}
 
-				time.Sleep(time.Second * time.Duration(alertSystem.monitorIntval))   // Rest for interval length
+				time.Sleep(time.Second * time.Duration(alertSystem.monitorIntval)) // Rest for interval length
 			}
 		}
 	}()
 }
-
 
 // Process the data stream data and see if we need to perform an alert
 func (alertSystem *AlertSystem) ProcessDataStream(cpu int, mem int, bytesRecvd int, bytesSent int) {

@@ -3,8 +3,8 @@
 *.a
 *.so
 
-src/agent
-src/handler
+src/Agent
+src/Handler
 src/logs/*
 src/github.com/google/*
 
