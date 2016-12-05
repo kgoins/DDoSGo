@@ -8,6 +8,7 @@ import (
 
 type ProcDataStreamCmd struct {
 	alertingSystem subsystems.AlertSystem
+	agentReg		subsystems.AgentRegistry
 	cpu        int
 	mem        int
 	bytesRecvd int
@@ -17,6 +18,7 @@ type ProcDataStreamCmd struct {
 func NewProcDataStreamCmd(cpu int, mem int, bytesRecvd int, bytesSent int) ProcDataStreamCmd {
 	return ProcDataStreamCmd{
 		alertingSystem: *visitors.AlertingVisitor.AlertingSys,
+		agentReg:		*visitors.AgentRegVisitor.AgentReg,
 		cpu: 		cpu,
 		mem:        mem,
 		bytesRecvd: bytesRecvd,
@@ -26,4 +28,5 @@ func NewProcDataStreamCmd(cpu int, mem int, bytesRecvd int, bytesSent int) ProcD
 
 func (procStreamCmd ProcDataStreamCmd) ExecCmd() {
 	fmt.Println("From procStream cmd: ", procStreamCmd)
+	procStreamCmd.alertingSystem.ProcessDataStream(procStreamCmd.cpu, procStreamCmd.mem, procStreamCmd.bytesRecvd, procStreamCmd.bytesSent)
 }

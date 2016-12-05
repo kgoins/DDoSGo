@@ -120,7 +120,10 @@ func (reg *AgentRegistry) ReturnTrace(hostname string) []string {
 	}
 }
 
+// Update given hander record in registry
+func (reg *AgentRegistry) UpdateRecordStatus() {}
 
+// Function to check registry for unresponsive agent records and alert system to problem if found
 func (reg *AgentRegistry) CheckRecords() (bool, []AgentRecord) {
 	fmt.Println("Checking Registry Records...")
 

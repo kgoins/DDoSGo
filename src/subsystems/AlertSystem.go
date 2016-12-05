@@ -66,6 +66,7 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
                        	for _, record := range records {
                        		fmt.Println(record)
                        	}
+                       	// Start alert system
 					} else {														 // No records found unresponsive
 						fmt.Println("No Records Reported Unresponsive")
 					}
@@ -74,4 +75,18 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 			}
 		}
 	}()
+}
+
+
+// Process the data stream data and see if we need to perform an alert
+func (alertSystem *AlertSystem) ProcessDataStream(cpu int, mem int, bytesRecvd int, bytesSent int) {
+
+	fmt.Printf("Processing Data Stream Values\nCPU\t%d\tMEM\t%d\tBytesRecvd\t%d\tBytesSent\t%d\n", cpu, mem, bytesRecvd, bytesSent)
+	// If values are strange, alert
+	if cpu > 90 {
+		fmt.Println("Cpu Value Anomaly for DataStream, Sending Alert")
+	} else {
+		fmt.Println("No DataStream Anomalies Detected")
+	}
+	// Else all clear
 }
