@@ -48,7 +48,7 @@ func NewHandler() *Handler {
 
 	agentReg := subsystems.NewAgentRegistry() // Setup agent registry
 
-	monIntval := 8                                              			// TODO: read from conf
+	monIntval := 12                                              			// TODO: read from conf
 	alertSystem := subsystems.NewAlertSystem(agentReg, workers, monIntval) // Setup alert system
 
 	visitors.SetupVisitors(alertSystem, agentReg)
@@ -65,8 +65,6 @@ func NewHandler() *Handler {
 }
 
 func (handler *Handler) Run() {
-	fmt.Println("Starting Handler...")
-
 	handler.dispatcher.Run()
 	handler.alertSystem.Run()
 	handler.signalHandler()

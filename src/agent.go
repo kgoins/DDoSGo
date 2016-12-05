@@ -50,7 +50,7 @@ func NewAgent() (Agent, error) {
 
 	collectionInterval := 2
 	sendInterval := 5
-	collector := subsystems.NewDataCollector(msgChannel, collectionInterval, sendInterval)
+	collector := subsystems.NewDataCollector(aIp, hIp, hPort, msgChannel, collectionInterval, sendInterval)
 
 	numWorkers := 2 // TODO: read from conf
 	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, numWorkers)

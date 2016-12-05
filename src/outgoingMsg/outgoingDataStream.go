@@ -3,14 +3,20 @@ package outgoingMsg
 import "fmt"
 
 type OutgoingDataStream struct {
+	Agent_ip 		string
+	Handler_ip 		string
+	Handler_port 	string 
 	Cpu        int
 	Mem        int
 	BytesRecvd int
 	BytesSent  int
 }
 
-func NewOutgoingDataStream(cpu int, mem int, bytesRecvd int, bytesSent int) OutgoingDataStream {
+func NewOutgoingDataStream(agent_ip string, handler_ip string, handler_port string, cpu int, mem int, bytesRecvd int, bytesSent int) OutgoingDataStream {
 	return OutgoingDataStream{
+		Agent_ip: 		agent_ip,
+		Handler_ip: 	handler_ip,
+		Handler_port: 	handler_port,
 		Cpu:        cpu,
 		Mem:        mem,
 		BytesRecvd: bytesRecvd,

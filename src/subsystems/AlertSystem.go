@@ -35,18 +35,14 @@ func NewAlertSystem(agentReg *AgentRegistry, workers int, monitorIntval int) *Al
 
 // Close alert subsystem connections
 func (alertSystem *AlertSystem) Close() {
-	fmt.Println("Closing Alert System Connections...")
-
 	// Close dispatcher connections & channel
 	alertSystem.shutdown <- true
 	alertSystem.dispatcher.Close()
 	close(alertSystem.dispatcherChannel)
-
 }
 
 // Run alert subsystem
 func (alertSystem *AlertSystem) Run() {
-	fmt.Println("Alert System Starting...")
 	alertSystem.MonitorRegistry()
 	alertSystem.dispatcher.Run()
 }
@@ -81,10 +77,10 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 // Process the data stream data and see if we need to perform an alert
 func (alertSystem *AlertSystem) ProcessDataStream(cpu int, mem int, bytesRecvd int, bytesSent int) {
 
-	fmt.Printf("Processing Data Stream Values\nCPU\t%d\tMEM\t%d\tBytesRecvd\t%d\tBytesSent\t%d\n", cpu, mem, bytesRecvd, bytesSent)
+	// fmt.Printf("Processing Data Stream Values\nCPU\t%d\tMEM\t%d\tBytesRecvd\t%d\tBytesSent\t%d\n", cpu, mem, bytesRecvd, bytesSent)
 	// If values are strange, alert
 	if cpu > 90 {
-		fmt.Println("Cpu Value Anomaly for DataStream, Sending Alert")
+		fmt.Println("Cpu Value Anomaly of %d for DataStream, Sending Alert", cpu)
 	} else {
 		fmt.Println("No DataStream Anomalies Detected")
 	}

@@ -121,11 +121,21 @@ func (reg *AgentRegistry) ReturnTrace(hostname string) []string {
 }
 
 // Update given hander record in registry
-func (reg *AgentRegistry) UpdateRecordStatus() {}
+func (reg *AgentRegistry) UpdateRecordStatus(agent_ip string) {
+
+	// Check registry for if agent exists, and then update its status to updated
+	agent, exists := reg.registry[agent_ip]
+	if exists {
+		agent.updated = true
+		reg.registry[agent_ip] = agent
+		// fmt.Println("Updating Record of Agent ", agent.agent_ip)	
+	}
+
+}
 
 // Function to check registry for unresponsive agent records and alert system to problem if found
 func (reg *AgentRegistry) CheckRecords() (bool, []AgentRecord) {
-	fmt.Println("Checking Registry Records...")
+	// fmt.Println("Checking Registry Records...")
 
 	var clean = true                         // Test for unresponsive records
 	var unresponsiveRecords []AgentRecord	 // The unresponsive records
