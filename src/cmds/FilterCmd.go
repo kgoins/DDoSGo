@@ -5,14 +5,14 @@ import "subsystems"
 import "visitors"
 
 type FilterCmd struct {
-	enforcer           subsystems.Enforcer
+	enforcer           *subsystems.Enforcer
 	agent_ip           string
 	startFilterPackets bool
 }
 
 func NewFilterCmd(agent_ip string, startFilteringPackets bool) FilterCmd {
 	return FilterCmd{
-		enforcer:           *visitors.EnforcerVisitor.EnforcerInstance,
+		enforcer:           visitors.EnforcerVisitor.EnforcerInstance,
 		agent_ip:           agent_ip,
 		startFilterPackets: startFilteringPackets,
 	}
@@ -20,6 +20,6 @@ func NewFilterCmd(agent_ip string, startFilteringPackets bool) FilterCmd {
 
 // Call agent.enforcer to begin NFQ
 func (filterCmd FilterCmd) ExecCmd() {
-	fmt.Println("Executing filtering command")
+	fmt.Println("Executing Filtering Command...")
 	filterCmd.enforcer.Start()
 }

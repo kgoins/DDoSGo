@@ -3,6 +3,7 @@ package subsystems
 import (
 	"dispatcher"
 	"fmt"
+	"net"
 	"outgoingMsg"
 	"time"
 )
@@ -65,10 +66,14 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 				clean, records := alertSystem.agentReg.CheckRecords() // Check registry for records
 				if clean != true {                                    // Records found unresponsive
 					fmt.Println("Records Reported Unresponsive")
-					for _, record := range records {
-						fmt.Println(record)
-						filterMsg := outgoingMsg.NewOutgoingFilterMsg(record.agent_ip, true) // Send msg to start filtering
-						alertSystem.sendAlertMsg(record.agent_ip, filterMsg)
+					for _, record := range records { // Check all unresponsive records
+						// fmt.Println(record)
+						if record.isFiltering == false { // If agent already filtering, skip msg sending
+							filterMsg := outgoingMsg.NewOutgoingFilterMsg(record.agent_ip, true) // Send msg to start filtering
+							alertSystem.sendFilterMsg(record.agent_ip, filterMsg)
+						} else { // Already filtering, log and ignore
+							fmt.Printf("Agent %s Already Filtering, Skipping Filter Msg\n", record.agent_ip)
+						}
 					}
 					// Start alert system
 				} else { // No records found unresponsive
@@ -81,20 +86,63 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 	}()
 }
 
-// Send the alert msg
-func (alertSystem *AlertSystem) sendAlertMsg(agent_ip string, filterMsg outgoingMsg.OutgoingFilterMsg) {
-	fmt.Printf("Sending Alert Msg\nIP\t%s\n", agent_ip)
+// Send the filter msg to the agent
+func (alertSystem *AlertSystem) sendFilterMsg(agent_ip string, filterMsg outgoingMsg.OutgoingFilterMsg) error {
+	fmt.Printf("Sending Alert Msg To Agent\t%s\n", agent_ip)
+
+	msgBytes, encodeErr := outgoingMsg.EncodeMsg(filterMsg)
+	if encodeErr != nil {
+		fmt.Println("Error encoding filter fmessage")
+		return encodeErr
+	}
+
+	conn, err := alertSystem.dialAgentForFiltering(agent_ip)
+
+	defer conn.Close()
+
+	if err != nil {
+		fmt.Println("err dialing handler", err)
+		return err
+	}
+
+	fmt.Println("sending message: " + filterMsg.String())
+	_, err = conn.Write(msgBytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return err
+
+}
+
+// Dial the agent in question for fitlering msgs to begin
+func (alertSystem *AlertSystem) dialAgentForFiltering(agent_ip string) (net.Conn, error) {
+
+	conn, err := net.Dial("tcp", agent_ip+":1338")
+
+	if err != nil {
+		fmt.Println(err)
+		return conn, err
+	} else {
+		return conn, nil
+	}
 }
 
 // Process the data stream data and see if we need to perform an alert
-func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, cpu int, mem int, bytesRecvd int, bytesSent int) {
+func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, cpu int, mem int, bytesRecvd int, bytesSent int, isFiltering bool) {
 
 	// fmt.Printf("Processing Data Stream Values\nCPU\t%d\tMEM\t%d\tBytesRecvd\t%d\tBytesSent\t%d\n", cpu, mem, bytesRecvd, bytesSent)
 	// If values are strange, alert
 	if cpu > 5 {
-		fmt.Printf("Cpu Value Anomaly of %d for DataStream from Agent %s\n", cpu, agent_ip)
-		filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, true)
-		alertSystem.sendAlertMsg(agent_ip, filterMsg)
+		fmt.Printf("Cpu Value Anomaly of %d for DataStream of Agent %s\n", cpu, agent_ip)
+		if isFiltering == false { // If not curerntly filtering, send filter msg
+			filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, true)
+			alertSystem.sendFilterMsg(agent_ip, filterMsg)
+			alertSystem.agentReg.SetAgentAsFiltering(agent_ip)
+		} else { // Already filtering, log and ignore
+			fmt.Println("Ignoring Anomaly As Agent Already Filtering")
+		}
+
 	} else {
 		fmt.Println("No DataStream Anomalies Detected")
 	}

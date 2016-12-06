@@ -93,7 +93,6 @@ func (agent Agent) Start() {
 	go agent.msgSender()
 
 	// Start subsystems
-	agent.enforcer.Start()
 	agent.collector.Start()
 	agent.dispatcher.Run()
 

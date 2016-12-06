@@ -4,7 +4,7 @@ import "subsystems"
 import "visitors"
 
 type RegisterCmd struct {
-	agentRegistry subsystems.AgentRegistry
+	agentRegistry *subsystems.AgentRegistry
 	agent_ip      string
 	handler_ip    string
 	handler_port  string
@@ -14,7 +14,7 @@ type RegisterCmd struct {
 
 func NewRegisterCmd(aIP string, hIP string, hPort string, trace []string, flag bool) RegisterCmd {
 	return RegisterCmd{
-		agentRegistry: *visitors.AgentRegVisitor.AgentReg,
+		agentRegistry: visitors.AgentRegVisitor.AgentReg,
 		agent_ip:      aIP,
 		handler_ip:    hIP,
 		handler_port:  hPort,

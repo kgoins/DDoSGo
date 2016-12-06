@@ -32,6 +32,7 @@ type AgentRecord struct {
 	handler_port string
 	traceroute   []string //An empty list, use append to add to it
 	updated      bool
+	isFiltering  bool
 }
 
 /**
@@ -49,7 +50,8 @@ func NewAgentRecord(aIP string, hIP string, port string, list []string) *AgentRe
 		handler_ip:   hIP,
 		handler_port: port,
 		traceroute:   list,
-		updated:      true}
+		updated:      true,
+		isFiltering:  false}
 }
 
 func (rec *AgentRecord) GetAgHostname() string {
@@ -128,7 +130,7 @@ func (reg *AgentRegistry) UpdateRecordStatus(agent_ip string) {
 	if exists {
 		agent.updated = true
 		reg.registry[agent_ip] = agent
-		// fmt.Println("Updating Record of Agent ", agent.agent_ip)	
+		// fmt.Println("Updating Record of Agent ", agent.agent_ip)
 	}
 
 }
@@ -137,19 +139,39 @@ func (reg *AgentRegistry) UpdateRecordStatus(agent_ip string) {
 func (reg *AgentRegistry) CheckRecords() (bool, []AgentRecord) {
 	// fmt.Println("Checking Registry Records...")
 
-	var clean = true                         // Test for unresponsive records
-	var unresponsiveRecords []AgentRecord	 // The unresponsive records
+	var clean = true                      // Test for unresponsive records
+	var unresponsiveRecords []AgentRecord // The unresponsive records
 
 	// Loop through registry and check records
 	for _, record := range reg.registry {
 		if record.updated == true {
-			record.updated = false								// If record was updated in last interval, mark rest to false
-			reg.registry[record.agent_ip] = record              // Reset record into registry
+			record.updated = false                 // If record was updated in last interval, mark rest to false
+			reg.registry[record.agent_ip] = record // Reset record into registry
 		} else {
-			clean = false                                             // Record was found unresponsive, we have to signal alerts
+			clean = false // Record was found unresponsive, we have to signal alerts
+			record.isFiltering = true
+			reg.registry[record.agent_ip] = record
 			unresponsiveRecords = append(unresponsiveRecords, record) // Append record to collection for return to the alert
 		}
 
 	}
 	return clean, unresponsiveRecords
+}
+
+func (reg *AgentRegistry) IsAgentFiltering(agent_ip string) bool {
+	return reg.registry[agent_ip].isFiltering
+}
+
+// Set a current agent in the registry as filtering
+func (reg *AgentRegistry) SetAgentAsFiltering(agent_ip string) {
+	record := reg.registry[agent_ip]
+	record.isFiltering = true
+	reg.registry[agent_ip] = record
+}
+
+// Turn off filtering for an agent in the registry
+func (reg *AgentRegistry) ClearAgentFilteringStatus(agent_ip string) {
+	record := reg.registry[agent_ip]
+	record.isFiltering = false
+	reg.registry[agent_ip] = record
 }
