@@ -13,7 +13,7 @@ type AgentConf struct {
 type HandlerConf struct{}
 
 func ReadAgentConf() (AgentConf, error) {
-	confPath := "config/agent_config.json"
+	confPath := "../agent_config.json"
 	var conf AgentConf
 
 	rawFile, fileErr := ioutil.ReadFile(confPath)
