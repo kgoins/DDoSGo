@@ -10,18 +10,16 @@ type RegisterCmd struct {
 	handler_port  string
 	agent_port    string
 	traceroute    []string
-	addRemoveFlag bool
 }
 
-func NewRegisterCmd(aIP string, hIP string, hPort string, trace []string, aPort string, flag bool) RegisterCmd {
+func NewRegisterCmd(aIP string, hIP string, hPort string, trace []string, aPort string) RegisterCmd {
 	return RegisterCmd{
 		agentRegistry: visitors.AgentRegVisitor.AgentReg,
 		agent_ip:      aIP,
 		handler_ip:    hIP,
 		handler_port:  hPort,
 		agent_port:    aPort,
-		traceroute:    trace,
-		addRemoveFlag: flag}
+		traceroute:    trace}
 }
 
 func (regcmd RegisterCmd) ExecCmd() {

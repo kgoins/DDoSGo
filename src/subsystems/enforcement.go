@@ -88,7 +88,7 @@ func (enforcer *Enforcer) startNFQ() {
 	fmt.Println("Filtering Packets...")
 	for nfqPacket := range nfqPacketChan {
 
-		// fmt.Println("made it to the actual filter")
+		fmt.Println("made it to the actual filter")
 		filterPacket(nfqPacket)
 	}
 

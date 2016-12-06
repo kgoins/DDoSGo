@@ -90,7 +90,7 @@ func (agent Agent) Start() {
 	agent.signalHandler()
 
 	//Build and send register msg
-	regMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, agent.agent_port, false)
+	regMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, agent.agent_port)
 	agent.sendMsg(regMsg)
 
 	go agent.msgSender()
