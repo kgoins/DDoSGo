@@ -62,22 +62,22 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 				fmt.Println("Alert System shutting down")
 				return
 			default:
-				fmt.Println("Checking Agent Registry For Unresponsive Agents...")
+				// fmt.Println("Checking Agent Registry For Unresponsive Agents...")
 				clean, records := alertSystem.agentReg.CheckRecords() // Check registry for records
 				if clean != true {                                    // Records found unresponsive
 					fmt.Println("Records Reported Unresponsive")
 					for _, record := range records { // Check all unresponsive records
 						// fmt.Println(record)
 						if record.isFiltering == false { // If agent already filtering, skip msg sending
-							filterMsg := outgoingMsg.NewOutgoingFilterMsg(record.agent_ip, true) // Send msg to start filtering
-							alertSystem.sendFilterMsg(record.agent_ip, filterMsg)
+							filterMsg := outgoingMsg.NewOutgoingFilterMsg(record.agent_ip, record.agent_port, true) // Send msg to start filtering
+							alertSystem.sendFilterMsg(record.agent_ip, record.agent_port, filterMsg)
 						} else { // Already filtering, log and ignore
 							fmt.Printf("Agent %s Already Filtering, Skipping Filter Msg\n", record.agent_ip)
 						}
 					}
 					// Start alert system
 				} else { // No records found unresponsive
-					fmt.Println("No Records Reported Unresponsive")
+					// fmt.Println("No Records Reported Unresponsive")
 				}
 
 				time.Sleep(time.Second * time.Duration(alertSystem.monitorIntval)) // Rest for interval length
@@ -87,8 +87,9 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 }
 
 // Send the filter msg to the agent
-func (alertSystem *AlertSystem) sendFilterMsg(agent_ip string, filterMsg outgoingMsg.OutgoingFilterMsg) error {
-	fmt.Printf("Sending Alert Msg To Agent\t%s\n", agent_ip)
+func (alertSystem *AlertSystem) sendFilterMsg(agent_ip string, agent_port string, filterMsg outgoingMsg.OutgoingFilterMsg) error {
+
+	fmt.Printf("Sending Alert Msg To Agent\t%s%s\n", agent_ip, agent_port)
 
 	msgBytes, encodeErr := outgoingMsg.EncodeMsg(filterMsg)
 	if encodeErr != nil {
@@ -96,7 +97,7 @@ func (alertSystem *AlertSystem) sendFilterMsg(agent_ip string, filterMsg outgoin
 		return encodeErr
 	}
 
-	conn, err := alertSystem.dialAgentForFiltering(agent_ip)
+	conn, err := alertSystem.dialAgentForFiltering(agent_ip, agent_port)
 
 	defer conn.Close()
 
@@ -116,9 +117,9 @@ func (alertSystem *AlertSystem) sendFilterMsg(agent_ip string, filterMsg outgoin
 }
 
 // Dial the agent in question for fitlering msgs to begin
-func (alertSystem *AlertSystem) dialAgentForFiltering(agent_ip string) (net.Conn, error) {
+func (alertSystem *AlertSystem) dialAgentForFiltering(agent_ip string, agent_port string) (net.Conn, error) {
 
-	conn, err := net.Dial("tcp", agent_ip+":1338")
+	conn, err := net.Dial("tcp", agent_ip+agent_port)
 
 	if err != nil {
 		fmt.Println(err)
@@ -129,22 +130,22 @@ func (alertSystem *AlertSystem) dialAgentForFiltering(agent_ip string) (net.Conn
 }
 
 // Process the data stream data and see if we need to perform an alert
-func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, cpu int, mem int, bytesRecvd int, bytesSent int, isFiltering bool) {
+func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, agent_port string, cpu int, mem int, bytesRecvd int, bytesSent int, isFiltering bool) {
 
 	// fmt.Printf("Processing Data Stream Values\nCPU\t%d\tMEM\t%d\tBytesRecvd\t%d\tBytesSent\t%d\n", cpu, mem, bytesRecvd, bytesSent)
 	// If values are strange, alert
 	if cpu > 5 {
-		fmt.Printf("Cpu Value Anomaly of %d for DataStream of Agent %s\n", cpu, agent_ip)
+		fmt.Printf("Cpu Value Anomaly of %d for DataStream of Agent %s%s\n", cpu, agent_ip, agent_port)
 		if isFiltering == false { // If not curerntly filtering, send filter msg
-			filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, true)
-			alertSystem.sendFilterMsg(agent_ip, filterMsg)
-			alertSystem.agentReg.SetAgentAsFiltering(agent_ip)
+			filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, agent_port, true)
+			alertSystem.sendFilterMsg(agent_ip, agent_port, filterMsg)
+			alertSystem.agentReg.SetAgentAsFiltering(agent_ip, agent_port)
 		} else { // Already filtering, log and ignore
 			fmt.Println("Ignoring Anomaly As Agent Already Filtering")
 		}
 
 	} else {
-		fmt.Println("No DataStream Anomalies Detected")
+		// fmt.Println("No DataStream Anomalies Detected")
 	}
 	// Else all clear
 }

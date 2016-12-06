@@ -26,14 +26,13 @@ var (
 
 type Enforcer struct {
 	nfq      *nfqueue.NFQueue
-	queueNum int
+	queueNum string
 	running  bool
 }
 
-func NewEnforcer() *Enforcer {
-	queueNum := 12 // From agent's conf??
-
-	nfq := nfqueue.NewNFQueue(uint16(queueNum))
+func NewEnforcer(queueNum string) *Enforcer {
+	queueNum_int, _ := strconv.Atoi(queueNum)
+	nfq := nfqueue.NewNFQueue(uint16(queueNum_int))
 
 	return &Enforcer{
 		queueNum: queueNum,
@@ -116,7 +115,7 @@ func isPacketBad(packet gopacket.Packet) bool {
 }
 
 // Utility functions
-func iptables(action string, queueNum int) {
+func iptables(action string, queueNum string) {
 	var arg string
 
 	switch action {
@@ -130,7 +129,7 @@ func iptables(action string, queueNum int) {
 	}
 
 	cmd := "iptables"
-	args := []string{arg, "OUTPUT", "-p", "0", "-j", "NFQUEUE", "--queue-num", strconv.Itoa(queueNum), "--queue-bypass"}
+	args := []string{arg, "OUTPUT", "-p", "0", "-j", "NFQUEUE", "--queue-num", queueNum, "--queue-bypass"}
 	// fmt.Println(args)
 
 	if err := exec.Command(cmd, args...).Run(); err != nil {

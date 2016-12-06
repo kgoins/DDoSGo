@@ -24,6 +24,7 @@ type Agent struct {
 	msgChannel         chan outgoingMsg.OutgoingMsg
 	shutdown           chan bool
 
+	agent_port   string
 	agent_ip     string
 	handler_ip   string
 	handler_port string
@@ -36,7 +37,7 @@ type Agent struct {
 	dispatcher        *dispatcher.Dispatcher
 }
 
-func NewAgent() (Agent, error) {
+func NewAgent(portNum string, nfQueue_num string) (Agent, error) {
 	agentConf, err := config.ReadAgentConf()
 
 	var handlerAddr string = agentConf.HandlerAddr + ":" + agentConf.HandlerPort
@@ -51,18 +52,19 @@ func NewAgent() (Agent, error) {
 	msgChannel := make(chan outgoingMsg.OutgoingMsg)
 	shutdown := make(chan bool)
 
+	port := portNum
+	port = ":" + port
+
 	collectionInterval := 2
 	sendInterval := 5
-	collector := subsystems.NewDataCollector(aIp, hIp, hPort, msgChannel, collectionInterval, sendInterval)
+	collector := subsystems.NewDataCollector(aIp, port, hIp, hPort, msgChannel, collectionInterval, sendInterval)
 
 	numWorkers := 2 // TODO: read from conf
 	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, numWorkers)
 
-	enforcer := subsystems.NewEnforcer()
+	enforcer := subsystems.NewEnforcer(nfQueue_num)
 
 	visitors.SetupAgentVisitors(enforcer) // Setup enforcement visitor
-
-	port := ":1338" // TODO: read from conf
 	serverSock, _ := net.Listen("tcp", port)
 
 	return Agent{handlerAddr: handlerAddr,
@@ -77,6 +79,7 @@ func NewAgent() (Agent, error) {
 		shutdown:          shutdown,
 		msgChannel:        msgChannel,
 
+		agent_port:   port,
 		agent_ip:     aIp,
 		handler_ip:   hIp,
 		handler_port: hPort,
@@ -87,7 +90,7 @@ func (agent Agent) Start() {
 	agent.signalHandler()
 
 	//Build and send register msg
-	regMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, false)
+	regMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, agent.agent_port, false)
 	agent.sendMsg(regMsg)
 
 	go agent.msgSender()
@@ -109,7 +112,7 @@ func (agent Agent) Close() {
 	agent.enforcer.Close()
 	fmt.Println("All Subsystems Closed")
 
-	closeRegMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, true)
+	closeRegMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, agent.agent_port, true)
 	agent.sendMsg(closeRegMsg)
 	fmt.Println("Sent shutdown Msg to Handler")
 
@@ -236,7 +239,15 @@ func getIP() (string, error) {
 
 // *** AGENT'S MAIN *** //
 func main() {
-	agent, newAgentErr := NewAgent()
+
+	//Get command line arguments
+	args := os.Args
+	if len(args) != 3 {
+		fmt.Printf("USAGE: ./agent.go port_num nfQueue_num\nThe Agent takes a port number and Iptables netfilter Queue number as arguments")
+		return
+	}
+
+	agent, newAgentErr := NewAgent(args[1], args[2])
 	if newAgentErr != nil {
 		fmt.Println("error creating agent")
 		fmt.Println(newAgentErr)
