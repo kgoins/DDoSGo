@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"outgoingMsg"
+	"strings"
 	"time"
 )
 
@@ -140,6 +141,24 @@ func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, agent_port st
 			filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, agent_port, true)
 			alertSystem.sendFilterMsg(agent_ip, agent_port, filterMsg)
 			alertSystem.agentReg.SetAgentAsFiltering(agent_ip, agent_port)
+
+			//Send filtering msg to Agent's trace
+			trace := alertSystem.agentReg.ReturnTrace(agent_ip, agent_port)
+
+			for _, ip := range trace {
+				ipPort := strings.Split(ip, ":")
+				ipPort[1] = ":" + ipPort[1]
+
+				//Check if trace is in the registry
+				reg := *alertSystem.agentReg
+				_, exists := reg.registry[ip]
+				if exists {
+					traceFilterMsg := outgoingMsg.NewOutgoingFilterMsg(ipPort[0], ipPort[1], true)
+					alertSystem.sendFilterMsg(ipPort[0], ipPort[1], traceFilterMsg)
+					alertSystem.agentReg.SetAgentAsFiltering(ipPort[0], ipPort[1])
+				}
+			}
+
 		} else { // Already filtering, log and ignore
 			fmt.Println("Ignoring Anomaly As Agent Already Filtering")
 		}
