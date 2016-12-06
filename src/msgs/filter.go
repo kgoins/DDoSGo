@@ -4,12 +4,15 @@ import "cmds"
 
 // Filter Message Function, Flag to Start Filtering
 type FilterMsg struct {
+	agent_ip           string
 	startFilterPackets bool
 }
 
-func NewFilterMsg(startFilterPackets bool) FilterMsg {
+func NewFilterMsg(agent_ip string, startFilterPackets bool) FilterMsg {
 	return FilterMsg{
-		startFilterPackets: startFilterPackets}
+		agent_ip:           agent_ip,
+		startFilterPackets: startFilterPackets,
+	}
 }
 
 func (filterMsg FilterMsg) String() string {
@@ -21,5 +24,5 @@ func (filterMsg FilterMsg) GetType() string {
 }
 
 func (filterMsg FilterMsg) BuildCmd() cmds.Cmd {
-	return cmds.NewFilterCmd(filterMsg.startFilterPackets)
+	return cmds.NewFilterCmd(filterMsg.agent_ip, filterMsg.startFilterPackets)
 }

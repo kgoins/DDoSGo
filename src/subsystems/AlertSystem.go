@@ -3,6 +3,7 @@ package subsystems
 import (
 	"dispatcher"
 	"fmt"
+	"outgoingMsg"
 	"time"
 )
 
@@ -66,6 +67,8 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 					fmt.Println("Records Reported Unresponsive")
 					for _, record := range records {
 						fmt.Println(record)
+						filterMsg := outgoingMsg.NewOutgoingFilterMsg(record.agent_ip, true) // Send msg to start filtering
+						alertSystem.sendAlertMsg(record.agent_ip, filterMsg)
 					}
 					// Start alert system
 				} else { // No records found unresponsive
@@ -78,13 +81,20 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 	}()
 }
 
+// Send the alert msg
+func (alertSystem *AlertSystem) sendAlertMsg(agent_ip string, filterMsg outgoingMsg.OutgoingFilterMsg) {
+	fmt.Printf("Sending Alert Msg\nIP\t%s\n", agent_ip)
+}
+
 // Process the data stream data and see if we need to perform an alert
-func (alertSystem *AlertSystem) ProcessDataStream(cpu int, mem int, bytesRecvd int, bytesSent int) {
+func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, cpu int, mem int, bytesRecvd int, bytesSent int) {
 
 	// fmt.Printf("Processing Data Stream Values\nCPU\t%d\tMEM\t%d\tBytesRecvd\t%d\tBytesSent\t%d\n", cpu, mem, bytesRecvd, bytesSent)
 	// If values are strange, alert
-	if cpu > 90 {
-		fmt.Println("Cpu Value Anomaly of %d for DataStream, Sending Alert", cpu)
+	if cpu > 5 {
+		fmt.Printf("Cpu Value Anomaly of %d for DataStream from Agent %s\n", cpu, agent_ip)
+		filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, true)
+		alertSystem.sendAlertMsg(agent_ip, filterMsg)
 	} else {
 		fmt.Println("No DataStream Anomalies Detected")
 	}

@@ -42,6 +42,11 @@ func BuildMsg(msgBytes []byte) Msg {
 		json.Unmarshal(rawMsg, &msg)
 		return msg
 
+	case "Filter":
+		msg := FilterMsg{}
+		json.Unmarshal(rawMsg, &msg)
+		return msg
+
 	default:
 		fmt.Println("unknown message type: %s", builder.MsgType)
 		return nil
