@@ -41,11 +41,20 @@ func NewEnforcer(queueNum string) *Enforcer {
 }
 
 func (enforcer *Enforcer) Close() {
-	fmt.Println("Closing Enforcer...")
 
-	enforcer.Stop()
+	if enforcer.running == true {
 
-	fmt.Println("Enforcer Closed")
+		fmt.Println("Closing Enforcer...")
+
+		enforcer.Stop()
+
+		enforcer.running = false
+		fmt.Println("Enforcer Closed")
+
+	} else {
+		fmt.Println("Enforcer Not Currently Active, Ignoring Cmd")
+	}
+
 }
 
 func (enforcer *Enforcer) Start() {

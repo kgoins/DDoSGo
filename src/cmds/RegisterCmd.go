@@ -32,10 +32,5 @@ func (regcmd RegisterCmd) ExecCmd() {
 
 	//Construct an agent record from given information
 	record := subsystems.NewAgentRecord(regcmd.agent_ip, regcmd.handler_ip, regcmd.handler_port, regcmd.agent_port, regcmd.traceroute)
-
-	if !regcmd.addRemoveFlag {
-		regcmd.agentRegistry.AddAgent(*record)
-	} else {
-		regcmd.agentRegistry.RemoveAgent(regcmd.agent_ip, regcmd.agent_port)
-	}
+	regcmd.agentRegistry.AddAgent(*record)
 }

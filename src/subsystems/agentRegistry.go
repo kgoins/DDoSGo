@@ -90,6 +90,7 @@ func NewAgentRegistry() *AgentRegistry {
  */
 func (reg *AgentRegistry) RemoveAgent(agentIP string, agentPort string) {
 	//Removes an agent from the list of registered agents
+	fmt.Printf("Deleting Agent %s%s From Registry\n", agentIP, agentPort)
 	key := agentIP + agentPort
 	delete(reg.registry, key)
 	//if hosname does not exist, delete does nothing

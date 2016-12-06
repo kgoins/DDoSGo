@@ -112,7 +112,7 @@ func (agent Agent) Close() {
 	agent.enforcer.Close()
 	fmt.Println("All Subsystems Closed")
 
-	closeRegMsg := outgoingMsg.NewOutgoingRegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.trace, agent.agent_port, true)
+	closeRegMsg := outgoingMsg.NewOutgoingUnegisterMsg(agent.agent_ip, agent.handler_ip, agent.handler_port, agent.agent_port)
 	agent.sendMsg(closeRegMsg)
 	fmt.Println("Sent shutdown Msg to Handler")
 
