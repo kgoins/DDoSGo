@@ -56,7 +56,7 @@ func NewHandler() *Handler {
 	monIntval := 12                                                        // TODO: read from conf
 	alertSystem := subsystems.NewAlertSystem(agentReg, workers, monIntval) // Setup alert system
 
-	visitors.SetupVisitors(alertSystem, agentReg)
+	visitors.SetupHandlerVisitors(alertSystem, agentReg)
 
 	return &Handler{
 		serverSock:        listenerSock,

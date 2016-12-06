@@ -15,6 +15,7 @@ import "fmt"
 
 type DataCollector struct {
 	agent_ip      string
+	agent_port    string
 	handler_ip    string
 	handler_port  string
 	msgChan       chan outgoingMsg.OutgoingMsg
@@ -23,12 +24,13 @@ type DataCollector struct {
 	shutdown      chan bool
 }
 
-func NewDataCollector(agent_ip string, handler_ip string, handler_port string,
+func NewDataCollector(agent_ip string, aPort string, handler_ip string, handler_port string,
 	msgChan chan outgoingMsg.OutgoingMsg, sendIntval int, collectIntval int) *DataCollector {
 
 	shutdown := make(chan bool)
 	return &DataCollector{
 		agent_ip:      agent_ip,
+		agent_port:    aPort,
 		handler_ip:    handler_ip,
 		handler_port:  handler_port,
 		msgChan:       msgChan,
@@ -45,7 +47,7 @@ func (collector *DataCollector) Start() {
 				return
 
 			default:
-				dataStream := collectOutgoingData(collector.agent_ip, collector.handler_ip, collector.handler_port, collector.collectIntval)
+				dataStream := collectOutgoingData(collector.agent_ip, collector.agent_port, collector.handler_ip, collector.handler_port, collector.collectIntval)
 				collector.msgChan <- dataStream
 
 				time.Sleep(time.Second * time.Duration(collector.sendIntval))
@@ -63,12 +65,12 @@ func (collector *DataCollector) Close() {
 
 // Data Collection
 
-func collectOutgoingData(agent_ip string, handler_ip string, handler_port string, intVal int) outgoingMsg.OutgoingDataStream {
+func collectOutgoingData(agent_ip string, agent_port string, handler_ip string, handler_port string, intVal int) outgoingMsg.OutgoingDataStream {
 	cpu := cpuUtil(intVal)
 	mem := memUtil()
 	bytesRecv, bytesSent := ntwkUtil(intVal)
 
-	return outgoingMsg.NewOutgoingDataStream(agent_ip, handler_ip, handler_port, cpu, mem, bytesRecv, bytesSent)
+	return outgoingMsg.NewOutgoingDataStream(agent_ip, agent_port, handler_ip, handler_port, cpu, mem, bytesRecv, bytesSent)
 }
 
 // Calculates the current percentage CPU utilization

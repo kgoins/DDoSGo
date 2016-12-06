@@ -30,8 +30,10 @@ type AgentRecord struct {
 	agent_ip     string
 	handler_ip   string
 	handler_port string
+	agent_port   string
 	traceroute   []string //An empty list, use append to add to it
 	updated      bool
+	isFiltering  bool
 }
 
 /**
@@ -42,14 +44,16 @@ type AgentRecord struct {
  *@param list A slice which contains all of the routers between the agent and the interwebz
  *@return A reference to the agent record itself
  */
-func NewAgentRecord(aIP string, hIP string, port string, list []string) *AgentRecord {
+func NewAgentRecord(aIP string, hIP string, port string, aPort string, list []string) *AgentRecord {
 
 	return &AgentRecord{
 		agent_ip:     aIP,
 		handler_ip:   hIP,
 		handler_port: port,
+		agent_port:   aPort,
 		traceroute:   list,
-		updated:      true}
+		updated:      true,
+		isFiltering:  false}
 }
 
 func (rec *AgentRecord) GetAgHostname() string {
@@ -84,10 +88,10 @@ func NewAgentRegistry() *AgentRegistry {
  *If the hostname is not found in the registry nothing is done
  *@param hostname A string representing the host name of the agent to be removed
  */
-func (reg *AgentRegistry) RemoveAgent(agentIP string) {
+func (reg *AgentRegistry) RemoveAgent(agentIP string, agentPort string) {
 	//Removes an agent from the list of registered agents
-
-	delete(reg.registry, agentIP)
+	key := agentIP + agentPort
+	delete(reg.registry, key)
 	//if hosname does not exist, delete does nothing
 }
 
@@ -98,7 +102,8 @@ func (reg *AgentRegistry) RemoveAgent(agentIP string) {
  */
 func (reg *AgentRegistry) AddAgent(agent AgentRecord) {
 	//Adds and agent to the registry (hash map)
-	reg.registry[agent.agent_ip] = agent
+	key := agent.agent_ip + agent.agent_port
+	reg.registry[key] = agent
 }
 
 /**
@@ -106,12 +111,12 @@ func (reg *AgentRegistry) AddAgent(agent AgentRecord) {
  *@param hostname The hostname of the agent to retrieve list for
  *@return A slice containing all of the devices between the agent and the web
  */
-func (reg *AgentRegistry) ReturnTrace(hostname string) []string {
+func (reg *AgentRegistry) ReturnTrace(aIP string, aPort string) []string {
 	//Returns all routers between an agent and the internet
 	//Returns whatever the config file has in it for a particular agent
 	//Return arrayList of host names?
-
-	agent, exists := reg.registry[hostname]
+	key := aIP + aPort
+	agent, exists := reg.registry[key]
 
 	if exists {
 		return agent.traceroute
@@ -121,14 +126,15 @@ func (reg *AgentRegistry) ReturnTrace(hostname string) []string {
 }
 
 // Update given hander record in registry
-func (reg *AgentRegistry) UpdateRecordStatus(agent_ip string) {
+func (reg *AgentRegistry) UpdateRecordStatus(agent_ip string, aPort string) {
 
 	// Check registry for if agent exists, and then update its status to updated
-	agent, exists := reg.registry[agent_ip]
+	key := agent_ip + aPort
+	agent, exists := reg.registry[key]
 	if exists {
 		agent.updated = true
-		reg.registry[agent_ip] = agent
-		// fmt.Println("Updating Record of Agent ", agent.agent_ip)	
+		reg.registry[key] = agent
+		// fmt.Println("Updating Record of Agent ", agent.agent_ip)
 	}
 
 }
@@ -137,19 +143,43 @@ func (reg *AgentRegistry) UpdateRecordStatus(agent_ip string) {
 func (reg *AgentRegistry) CheckRecords() (bool, []AgentRecord) {
 	// fmt.Println("Checking Registry Records...")
 
-	var clean = true                         // Test for unresponsive records
-	var unresponsiveRecords []AgentRecord	 // The unresponsive records
+	var clean = true                      // Test for unresponsive records
+	var unresponsiveRecords []AgentRecord // The unresponsive records
 
 	// Loop through registry and check records
 	for _, record := range reg.registry {
 		if record.updated == true {
-			record.updated = false								// If record was updated in last interval, mark rest to false
-			reg.registry[record.agent_ip] = record              // Reset record into registry
+			record.updated = false // If record was updated in last interval, mark rest to false
+			key := record.agent_ip + record.agent_port
+			reg.registry[key] = record // Reset record into registry
 		} else {
-			clean = false                                             // Record was found unresponsive, we have to signal alerts
+			clean = false // Record was found unresponsive, we have to signal alerts
+			record.isFiltering = true
+			key := record.agent_ip + record.agent_port
+			reg.registry[key] = record
 			unresponsiveRecords = append(unresponsiveRecords, record) // Append record to collection for return to the alert
 		}
 
 	}
 	return clean, unresponsiveRecords
+}
+
+func (reg *AgentRegistry) IsAgentFiltering(agent_ip string, agent_port string) bool {
+	return reg.registry[agent_ip+agent_port].isFiltering
+}
+
+// Set a current agent in the registry as filtering
+func (reg *AgentRegistry) SetAgentAsFiltering(agent_ip string, agent_port string) {
+	key := agent_ip + agent_port
+	record := reg.registry[key]
+	record.isFiltering = true
+	reg.registry[key] = record
+}
+
+// Turn off filtering for an agent in the registry
+func (reg *AgentRegistry) ClearAgentFilteringStatus(agent_ip string, agent_port string) {
+	key := agent_ip + agent_port
+	record := reg.registry[key]
+	record.isFiltering = false
+	reg.registry[key] = record
 }

@@ -26,21 +26,22 @@ var (
 
 type Enforcer struct {
 	nfq      *nfqueue.NFQueue
-	queueNum int
+	queueNum string
+	running  bool
 }
 
-func NewEnforcer() *Enforcer {
-	queueNum := 12 // From agent's conf??
-
-	nfq := nfqueue.NewNFQueue(uint16(queueNum))
+func NewEnforcer(queueNum string) *Enforcer {
+	queueNum_int, _ := strconv.Atoi(queueNum)
+	nfq := nfqueue.NewNFQueue(uint16(queueNum_int))
 
 	return &Enforcer{
 		queueNum: queueNum,
-		nfq:      nfq}
+		nfq:      nfq,
+		running:  false}
 }
 
 func (enforcer *Enforcer) Close() {
-	fmt.Println("closing enforcer")
+	fmt.Println("Closing Enforcer...")
 
 	enforcer.Stop()
 
@@ -49,30 +50,36 @@ func (enforcer *Enforcer) Close() {
 
 func (enforcer *Enforcer) Start() {
 
-	iptables("start", enforcer.queueNum)
-	go enforcer.startNFQ()
+	if enforcer.running == false {
+		enforcer.running = true
+		iptables("start", enforcer.queueNum)
+		go enforcer.startNFQ()
+	} else {
+		fmt.Println("Enforcer Already Running, Ignoring Filter Cmd")
+	}
+
 }
 
 func (enforcer *Enforcer) Stop() {
 	enforcer.nfq.Close()
-	fmt.Println("Closing nfq")
+	// fmt.Println("Closing nfq")
 
 	iptables("stop", enforcer.queueNum)
 }
 
 func (enforcer *Enforcer) startNFQ() {
-	fmt.Println("starting packet filter")
+	fmt.Println("Starting Packet Filter...")
 
 	nfqPacketChan, err := enforcer.nfq.Open()
 	if err != nil {
-		fmt.Printf("Error opening NFQueue: %v\n", err)
+		fmt.Printf("Error Opening NFQueue: %v\n", err)
 		return
 	}
 
-	fmt.Println("filtering packets")
+	fmt.Println("Filtering Packets...")
 	for nfqPacket := range nfqPacketChan {
 
-		fmt.Println("made it to the actual filter")
+		// fmt.Println("made it to the actual filter")
 		filterPacket(nfqPacket)
 	}
 
@@ -80,7 +87,7 @@ func (enforcer *Enforcer) startNFQ() {
 }
 
 func filterPacket(nfqPacket *nfqueue.NFQPacket) {
-	fmt.Println("Processing packet")
+	// fmt.Println("Processing packet")
 
 	if isPacketBad(nfqPacket.Packet) {
 		nfqPacket.Accept()
@@ -94,11 +101,11 @@ func isPacketBad(packet gopacket.Packet) bool {
 
 	for _, layer := range packetLayers {
 		if layer == layers.LayerTypeIPv4 {
-			fmt.Println("IPv4: ", ipLayer.SrcIP, "->", ipLayer.DstIP)
+			// fmt.Println("IPv4: ", ipLayer.SrcIP, "->", ipLayer.DstIP)
 		}
 
 		if layer == layers.LayerTypeICMPv4 {
-			fmt.Println("found icmp")
+			// fmt.Println("found icmp")
 			// return false
 			return true
 		}
@@ -108,22 +115,22 @@ func isPacketBad(packet gopacket.Packet) bool {
 }
 
 // Utility functions
-func iptables(action string, queueNum int) {
+func iptables(action string, queueNum string) {
 	var arg string
 
 	switch action {
 	case "start":
 		arg = "-A"
-		fmt.Println("starting Iptables")
+		// fmt.Println("starting Iptables")
 
 	case "stop":
 		arg = "-D"
-		fmt.Println("stopping Iptables")
+		// fmt.Println("stopping Iptables")
 	}
 
 	cmd := "iptables"
-	args := []string{arg, "OUTPUT", "-p", "0", "-j", "NFQUEUE", "--queue-num", strconv.Itoa(queueNum), "--queue-bypass"}
-	fmt.Println(args)
+	args := []string{arg, "OUTPUT", "-p", "0", "-j", "NFQUEUE", "--queue-num", queueNum, "--queue-bypass"}
+	// fmt.Println(args)
 
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -144,7 +151,7 @@ func getPacketLayers(packetData []byte) []gopacket.LayerType {
 	foundLayerTypes := []gopacket.LayerType{}
 	err := parser.DecodeLayers(packetData, &foundLayerTypes)
 	if err != nil {
-		// fmt.Println("Trouble decoding layers: ", err)
+		// // fmt.Println("Trouble decoding layers: ", err)
 	}
 
 	return foundLayerTypes
