@@ -32,6 +32,7 @@ type Enforcer struct {
 
 func NewEnforcer(queueNum string) *Enforcer {
 	queueNum_int, _ := strconv.Atoi(queueNum)
+	fmt.Println(queueNum_int)
 	nfq := nfqueue.NewNFQueue(uint16(queueNum_int))
 
 	return &Enforcer{
@@ -49,7 +50,6 @@ func (enforcer *Enforcer) Close() {
 }
 
 func (enforcer *Enforcer) Start() {
-
 	if enforcer.running == false {
 		enforcer.running = true
 		iptables("start", enforcer.queueNum)
@@ -78,8 +78,6 @@ func (enforcer *Enforcer) startNFQ() {
 
 	fmt.Println("Filtering Packets...")
 	for nfqPacket := range nfqPacketChan {
-
-		// fmt.Println("made it to the actual filter")
 		filterPacket(nfqPacket)
 	}
 
@@ -100,17 +98,32 @@ func isPacketBad(packet gopacket.Packet) bool {
 	packetLayers := getPacketLayers(packet.Data())
 
 	for _, layer := range packetLayers {
+
 		if layer == layers.LayerTypeIPv4 {
-			// fmt.Println("IPv4: ", ipLayer.SrcIP, "->", ipLayer.DstIP)
+
+			// dstIp := ipLayer.SrcIP.String()
+			sourceIp := ipLayer.DstIP.String()
+
+			// fmt.Println("ips: ", sourceIp, "  ", dstIp)
+
+			if sourceIp == "127.0.0.1" || sourceIp == "192.168.56.103" {
+				// fmt.Println("verdict: keeping")
+				return true
+			}
+
+			if sourceIp == "192.168.56.1" {
+				// fmt.Println("verdict: dropping")
+				return false
+			}
 		}
 
 		if layer == layers.LayerTypeICMPv4 {
-			// fmt.Println("found icmp")
-			// return false
-			return true
+			// fmt.Println("verdict: dropping ping")
+			return false
 		}
 	}
 
+	// fmt.Println("unknown packet type")
 	return true
 }
 
@@ -130,7 +143,7 @@ func iptables(action string, queueNum string) {
 
 	cmd := "iptables"
 	args := []string{arg, "OUTPUT", "-p", "0", "-j", "NFQUEUE", "--queue-num", queueNum, "--queue-bypass"}
-	// fmt.Println(args)
+	fmt.Println(args)
 
 	if err := exec.Command(cmd, args...).Run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)

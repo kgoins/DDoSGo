@@ -58,7 +58,7 @@ func NewNFQueue(queue uint16) *NFQueue {
 	return &NFQueue{
 		queue:    queue,
 		copySize: defaultCopySize,
-		packets:  make(chan *NFQPacket),
+		packets:  make(chan *NFQPacket, 1000),
 	}
 }
 

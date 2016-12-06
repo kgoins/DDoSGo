@@ -243,7 +243,7 @@ func main() {
 	//Get command line arguments
 	args := os.Args
 	if len(args) != 3 {
-		fmt.Printf("USAGE: ./agent.go port_num nfQueue_num\nThe Agent takes a port number and Iptables netfilter Queue number as arguments")
+		fmt.Printf("USAGE: ./agent.go port_num nfQueue_num\nThe Agent takes a port number and Iptables netfilter Queue number as arguments\n")
 		return
 	}
 
