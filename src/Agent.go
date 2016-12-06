@@ -15,6 +15,7 @@ import "dispatcher"
 import "subsystems"
 
 import "workers"
+import "visitors"
 
 type Agent struct {
 	handlerAddr        string
@@ -58,6 +59,8 @@ func NewAgent() (Agent, error) {
 	dispatcher := dispatcher.NewDispatcher(dispatcherChannel, numWorkers)
 
 	enforcer := subsystems.NewEnforcer()
+
+	visitors.SetupAgentVisitors(enforcer) // Setup enforcement visitor
 
 	port := ":1338" // TODO: read from conf
 	serverSock, _ := net.Listen("tcp", port)
