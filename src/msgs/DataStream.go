@@ -4,24 +4,26 @@ import "fmt"
 import "cmds"
 
 type DataStream struct {
-	Agent_ip 		string
-	Handler_ip 		string
-	Handler_port 	string 
-	Cpu        int
-	Mem        int
-	BytesRecvd int
-	BytesSent  int
+	Agent_ip     string
+	Agent_port   string
+	Handler_ip   string
+	Handler_port string
+	Cpu          int
+	Mem          int
+	BytesRecvd   int
+	BytesSent    int
 }
 
-func NewDataStream(agent_ip string, handler_ip string, handler_port string, cpu int, mem int, bytesRecvd int, bytesSent int) DataStream {
+func NewDataStream(agent_ip string, aPort string, handler_ip string, handler_port string, cpu int, mem int, bytesRecvd int, bytesSent int) DataStream {
 	return DataStream{
-		Agent_ip: 		agent_ip,
-		Handler_ip: 	handler_ip,
-		Handler_port: 	handler_port,
-		Cpu:        cpu,
-		Mem:        mem,
-		BytesRecvd: bytesRecvd,
-		BytesSent:  bytesSent}
+		Agent_ip:     agent_ip,
+		Agent_port:   aPort,
+		Handler_ip:   handler_ip,
+		Handler_port: handler_port,
+		Cpu:          cpu,
+		Mem:          mem,
+		BytesRecvd:   bytesRecvd,
+		BytesSent:    bytesSent}
 }
 
 func (stream DataStream) GetType() string {
@@ -35,5 +37,5 @@ func (stream DataStream) String() string {
 }
 
 func (stream DataStream) BuildCmd() cmds.Cmd {
-	return cmds.NewProcDataStreamCmd(stream.Agent_ip, stream.Cpu, stream.Mem, stream.BytesRecvd, stream.BytesSent)
+	return cmds.NewProcDataStreamCmd(stream.Agent_ip, stream.Agent_port, stream.Cpu, stream.Mem, stream.BytesRecvd, stream.BytesSent)
 }
