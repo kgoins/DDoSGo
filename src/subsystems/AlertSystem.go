@@ -183,7 +183,7 @@ func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, agent_port st
 				reg := *alertSystem.agentReg
 				_, exists := reg.registry[ip]
 				if exists {
-					traceFilterMsg := outgoingMsg.NewOutgoingFilterMsg(ipPort[0], ipPort[1], true)
+					traceFilterMsg := outgoingMsg.NewOutgoingFilterMsg(ipPort[0], ipPort[1])
 					alertSystem.sendFilterMsg(ipPort[0], ipPort[1], traceFilterMsg)
 					alertSystem.agentReg.SetAgentAsFiltering(ipPort[0], ipPort[1])
 				}
