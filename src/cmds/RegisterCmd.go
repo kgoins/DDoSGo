@@ -10,18 +10,16 @@ type RegisterCmd struct {
 	handler_port  string
 	agent_port    string
 	traceroute    []string
-	addRemoveFlag bool
 }
 
-func NewRegisterCmd(aIP string, hIP string, hPort string, trace []string, aPort string, flag bool) RegisterCmd {
+func NewRegisterCmd(aIP string, hIP string, hPort string, trace []string, aPort string) RegisterCmd {
 	return RegisterCmd{
 		agentRegistry: visitors.AgentRegVisitor.AgentReg,
 		agent_ip:      aIP,
 		handler_ip:    hIP,
 		handler_port:  hPort,
 		agent_port:    aPort,
-		traceroute:    trace,
-		addRemoveFlag: flag}
+		traceroute:    trace}
 }
 
 func (regcmd RegisterCmd) ExecCmd() {
@@ -32,10 +30,5 @@ func (regcmd RegisterCmd) ExecCmd() {
 
 	//Construct an agent record from given information
 	record := subsystems.NewAgentRecord(regcmd.agent_ip, regcmd.handler_ip, regcmd.handler_port, regcmd.agent_port, regcmd.traceroute)
-
-	if !regcmd.addRemoveFlag {
-		regcmd.agentRegistry.AddAgent(*record)
-	} else {
-		regcmd.agentRegistry.RemoveAgent(regcmd.agent_ip, regcmd.agent_port)
-	}
+	regcmd.agentRegistry.AddAgent(*record)
 }

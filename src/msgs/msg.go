@@ -42,8 +42,18 @@ func BuildMsg(msgBytes []byte) Msg {
 		json.Unmarshal(rawMsg, &msg)
 		return msg
 
+	case "Unregister":
+		msg := UnregisterMsg{}
+		json.Unmarshal(rawMsg, &msg)
+		return msg
+
 	case "Filter":
 		msg := FilterMsg{}
+		json.Unmarshal(rawMsg, &msg)
+		return msg
+
+	case "StopEnforcer":
+		msg := StopEnforcerMsg{}
 		json.Unmarshal(rawMsg, &msg)
 		return msg
 

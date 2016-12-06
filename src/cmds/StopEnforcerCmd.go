@@ -4,14 +4,14 @@ import "fmt"
 import "subsystems"
 import "visitors"
 
-type FilterCmd struct {
+type StopEnforcerCmd struct {
 	enforcer   *subsystems.Enforcer
 	agent_ip   string
 	agent_port string
 }
 
-func NewFilterCmd(agent_ip string, agent_port string) FilterCmd {
-	return FilterCmd{
+func NewStopEnforcerCmd(agent_ip string, agent_port string) StopEnforcerCmd {
+	return StopEnforcerCmd{
 		enforcer:   visitors.EnforcerVisitor.EnforcerInstance,
 		agent_ip:   agent_ip,
 		agent_port: agent_port,
@@ -19,7 +19,7 @@ func NewFilterCmd(agent_ip string, agent_port string) FilterCmd {
 }
 
 // Call agent.enforcer to begin NFQ
-func (filterCmd FilterCmd) ExecCmd() {
-	fmt.Println("Executing Filtering Command...")
-	filterCmd.enforcer.Start()
+func (stopEnforcerCmd StopEnforcerCmd) ExecCmd() {
+	fmt.Println("Executing Stop Filtering Command...")
+	stopEnforcerCmd.enforcer.Close()
 }
