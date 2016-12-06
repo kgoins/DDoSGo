@@ -165,7 +165,7 @@ func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, agent_port st
 
 	// fmt.Printf("Processing Data Stream Values\nCPU\t%d\tMEM\t%d\tBytesRecvd\t%d\tBytesSent\t%d\n", cpu, mem, bytesRecvd, bytesSent)
 	// If values are strange, alert
-	if cpu > 90 {
+	if cpu > 90 || bytesRecvd > 20000 {
 		fmt.Printf("Cpu Value Anomaly of %d for DataStream of Agent %s%s\n", cpu, agent_ip, agent_port)
 		if isFiltering == false { // If not curerntly filtering, send filter msg
 			filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, agent_port)
@@ -193,7 +193,7 @@ func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, agent_port st
 			fmt.Println("Ignoring Anomaly As Agent Already Filtering")
 		}
 
-	} else if (cpu <= 90) && (isFiltering == true) {
+	} else if ((cpu <= 80) || (bytesRecvd <= 10000)) && (isFiltering == true) {
 
 		fmt.Printf("Stopping Filtering For Agent %s%s\n", agent_ip, agent_port)
 
