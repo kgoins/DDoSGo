@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"config"
 )
 
 // static vars needed for DecodeLayers to run
@@ -28,6 +29,7 @@ type Enforcer struct {
 	nfq      *nfqueue.NFQueue
 	queueNum string
 	running  bool
+	offendingIPs []string
 }
 
 func NewEnforcer(queueNum string) *Enforcer {
@@ -35,12 +37,25 @@ func NewEnforcer(queueNum string) *Enforcer {
 	fmt.Println(queueNum_int)
 	nfq := nfqueue.NewNFQueue(uint16(queueNum_int))
 
+	ips,_ := config.ReadIpConf()
+	
+
 	return &Enforcer{
 		queueNum: queueNum,
 		nfq:      nfq,
-		running:  false}
+		running:  false,
+		offendingIPs: ips.IPs}
 }
 
+//Update the offending ips list
+func (enforcer *Enforcer) updateOffendingIps(newIPs []string){
+     enforcer.offendingIPs = newIPs
+     
+     for _, ip := range enforcer.offendingIPs{
+     	 fmt.Println("Blocking new ip: %s", ip)
+     }
+}
+	 
 func (enforcer *Enforcer) Close() {
 
 	if enforcer.running == true {
@@ -87,23 +102,23 @@ func (enforcer *Enforcer) startNFQ() {
 
 	fmt.Println("Filtering Packets...")
 	for nfqPacket := range nfqPacketChan {
-		filterPacket(nfqPacket)
+		filterPacket(nfqPacket, enforcer.offendingIPs)
 	}
 
 	fmt.Println("exiting NFQ")
 }
 
-func filterPacket(nfqPacket *nfqueue.NFQPacket) {
+func filterPacket(nfqPacket *nfqueue.NFQPacket, offendingIPs []string) {
 	// fmt.Println("Processing packet")
 
-	if isPacketBad(nfqPacket.Packet) {
+	if isPacketBad(nfqPacket.Packet, offendingIPs) {
 		nfqPacket.Accept()
 	} else {
 		nfqPacket.Drop()
 	}
 }
 
-func isPacketBad(packet gopacket.Packet) bool {
+func isPacketBad(packet gopacket.Packet, offendingIPs []string) bool {
 	packetLayers := getPacketLayers(packet.Data())
 
 	for _, layer := range packetLayers {
@@ -120,9 +135,12 @@ func isPacketBad(packet gopacket.Packet) bool {
 				return true
 			}
 
-			if sourceIp == "192.168.56.1" {
-				// fmt.Println("verdict: dropping")
-				return false
+			for _, ip := range offendingIPs{
+			
+				if sourceIp == ip {
+				   // fmt.Println("verdict: dropping")
+				   return false
+			        }
 			}
 		}
 

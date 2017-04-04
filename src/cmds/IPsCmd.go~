@@ -1,0 +1,18 @@
+package cmds
+
+import "subsytems"
+import "visitors"
+
+type IPsCmd struct{
+     agent *subsystems.Enforcer
+     agent_ip string
+     agent_port string
+     OffendingIPs []string
+}
+
+func NewIPsCmd(aIP string, aPort string, ips []string) IPsCmd{
+     return IPsCmd{
+     	    agent: visitors.AgentRegVisitor.Agent
+	    agent_ip: aIP,
+	    agent_port: aPort,
+	    OffendingIPs: ips}

@@ -10,6 +10,10 @@ type AgentConf struct {
 	Traceroute  []string
 }
 
+type IpConf struct {
+     IPs []string
+}    
+
 type HandlerConf struct{}
 
 func ReadAgentConf() (AgentConf, error) {
@@ -50,6 +54,29 @@ func ReadHandlerConf() (AgentConf, error) {
 	}
 
 	return conf, nil
+}
+
+func ReadIpConf() (IpConf, error){
+     confPath := "../offending_ips.json"
+     var conf IpConf
+
+     rawFile, fileErr := ioutil.ReadFile(confPath)
+
+     err := json.Unmarshal(rawFile, &conf)
+
+     if fileErr != nil{
+     	fmt.Println("error reading ip Config")
+	fmt.Println(err)
+	return conf,err
+     }
+
+     if err != nil{
+	fmt.Println("error parsing ip config file")
+	fmt.Println(err)
+	return conf,err
+     }
+
+     return conf,nil
 }
 
 func main() {
