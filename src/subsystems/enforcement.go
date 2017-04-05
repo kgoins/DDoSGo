@@ -38,7 +38,7 @@ func NewEnforcer(queueNum string) *Enforcer {
 	nfq := nfqueue.NewNFQueue(uint16(queueNum_int))
 
 	ips,_ := config.ReadIpConf()
-	
+
 
 	return &Enforcer{
 		queueNum: queueNum,
@@ -48,14 +48,14 @@ func NewEnforcer(queueNum string) *Enforcer {
 }
 
 //Update the offending ips list
-func (enforcer *Enforcer) updateOffendingIps(newIPs []string){
+func (enforcer *Enforcer) UpdateOffendingIps(newIPs []string){
      enforcer.offendingIPs = newIPs
-     
+
      for _, ip := range enforcer.offendingIPs{
      	 fmt.Println("Blocking new ip: %s", ip)
      }
 }
-	 
+
 func (enforcer *Enforcer) Close() {
 
 	if enforcer.running == true {
@@ -136,7 +136,7 @@ func isPacketBad(packet gopacket.Packet, offendingIPs []string) bool {
 			}
 
 			for _, ip := range offendingIPs{
-			
+
 				if sourceIp == ip {
 				   // fmt.Println("verdict: dropping")
 				   return false
