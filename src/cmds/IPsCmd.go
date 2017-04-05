@@ -4,18 +4,23 @@ import "subsytems"
 import "visitors"
 
 type IPsCmd struct{
-     agent *subsystems.Enforcer
+     enforcer *subsystems.Enforcer
      agent_ip string
      agent_port string
      OffendingIPs []string
 }
 
+// Create new IPsCmd
 func NewIPsCmd(aIP string, aPort string, ips []string) IPsCmd{
      return IPsCmd{
-     	    agent: visitors.AgentRegVisitor.Agent
+ 	    enforcer: visitors.EnforcerVisitor.EnforcerInstance,
 	    agent_ip: aIP,
 	    agent_port: aPort,
 	    OffendingIPs: ips}
 
-//Need a way to get an enforcer instance into the New IP cmd
-//Maybe pass that in when it is created otherwise we would have to create the instance from within this 'package'
+
+// Execute cmd to update ips
+func (IPsCmd ipcmd) ExecCmd() {
+  print("Updating enforcer instance ips...")
+  ipcmd.enforcer.updateOffendingIps(ipcmd.OffendingIPs)
+}

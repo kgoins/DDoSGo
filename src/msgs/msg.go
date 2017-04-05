@@ -57,6 +57,11 @@ func BuildMsg(msgBytes []byte) Msg {
 		json.Unmarshal(rawMsg, &msg)
 		return msg
 
+	case "IPs":
+		msg := IPsMsg{}
+		json.Unmarshal(rawMsg, &msg)
+		return msg
+
 	default:
 		fmt.Println("unknown message type: %s", builder.MsgType)
 		return nil
