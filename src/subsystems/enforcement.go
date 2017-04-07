@@ -39,6 +39,10 @@ func NewEnforcer(queueNum string) *Enforcer {
 
 	ips,_ := config.ReadIpConf()
 
+	fmt.Println("Reading previously identified blacklist ips: ")
+	for _, ip := range ips.IPs {
+		fmt.Println(ip)
+	}
 
 	return &Enforcer{
 		queueNum: queueNum,
@@ -48,14 +52,22 @@ func NewEnforcer(queueNum string) *Enforcer {
 }
 
 //Update the offending ips list
-func (enforcer *Enforcer) UpdateOffendingIps(newIPs []string){
-     enforcer.offendingIPs = newIPs
+func (enforcer *Enforcer) UpdateOffendingIps(newIPs []string) {
 
 		 fmt.Println("Received ips: ", newIPs)
 
-     for _, ip := range enforcer.offendingIPs{
+     for _, ip := range newIPs {
      	 fmt.Println("Blocking new ip: ", ip)
+			 enforcer.offendingIPs = append(enforcer.offendingIPs, ip)
      }
+
+		 fmt.Println("\n\n***BLOCKED IP LIST***")
+
+		 for _, ip := range enforcer.offendingIPs {
+			 fmt.Println(ip)
+		 }
+
+
 }
 
 func (enforcer *Enforcer) Close() {
