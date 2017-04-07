@@ -51,8 +51,10 @@ func NewEnforcer(queueNum string) *Enforcer {
 func (enforcer *Enforcer) UpdateOffendingIps(newIPs []string){
      enforcer.offendingIPs = newIPs
 
+		 fmt.Println("Received ips: ", newIPs)
+
      for _, ip := range enforcer.offendingIPs{
-     	 fmt.Println("Blocking new ip: %s", ip)
+     	 fmt.Println("Blocking new ip: ", ip)
      }
 }
 
