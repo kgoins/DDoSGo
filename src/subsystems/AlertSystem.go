@@ -88,6 +88,36 @@ func (alertSystem *AlertSystem) MonitorRegistry() {
 }
 
 // Send the filter msg to the agent
+func (alertSystem *AlertSystem) sendUpdateMsg(agent_ip string, agent_port string, ipMsg outgoingMsg.OutgoingIPsMsg) error {
+
+	fmt.Printf("Sending Update Msg To Agent\t%s%s\n", agent_ip, agent_port)
+
+	msgBytes, encodeErr := outgoingMsg.EncodeMsg(ipMsg)
+	if encodeErr != nil {
+		fmt.Println("Error encoding update fmessage")
+		return encodeErr
+	}
+
+	conn, err := alertSystem.dialAgentForFiltering(agent_ip, agent_port)
+
+	defer conn.Close()
+
+	if err != nil {
+		fmt.Println("err dialing handler", err)
+		return err
+	}
+
+	fmt.Println("sending message: " + ipMsg.String())
+	_, err = conn.Write(msgBytes)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	return err
+
+}
+
+// Send the filter msg to the agent
 func (alertSystem *AlertSystem) sendFilterMsg(agent_ip string, agent_port string, filterMsg outgoingMsg.OutgoingFilterMsg) error {
 
 	fmt.Printf("Sending Alert Msg To Agent\t%s%s\n", agent_ip, agent_port)
@@ -169,7 +199,10 @@ func (alertSystem *AlertSystem) ProcessDataStream(agent_ip string, agent_port st
 		fmt.Printf("Cpu Value Anomaly of %d for DataStream of Agent %s%s\n", cpu, agent_ip, agent_port)
 		if isFiltering == false { // If not curerntly filtering, send filter msg
 			filterMsg := outgoingMsg.NewOutgoingFilterMsg(agent_ip, agent_port)
+			ips := []string{ "192.168.42.1" }
+			updateIPMsg := outgoingMsg.NewOutgoingIPsMsg(agent_ip, agent_port, ips)
 			alertSystem.sendFilterMsg(agent_ip, agent_port, filterMsg)
+			alertSystem.sendUpdateMsg(agent_ip, agent_port, updateIPMsg)
 			alertSystem.agentReg.SetAgentAsFiltering(agent_ip, agent_port)
 
 			//Send filtering msg to Agent's trace
